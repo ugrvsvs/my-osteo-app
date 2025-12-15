@@ -3,30 +3,45 @@
 import { Logo } from '@/components/app/logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/firebase';
-import { GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
-import { ChromeIcon } from 'lucide-react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function LoginPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, auth } = useAuth();
   const router = useRouter();
+  const [email, setEmail] = useState('doctor@osteo.app');
+  const [password, setPassword] = useState('password123');
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (user) {
+    if (!loading && user) {
       router.push('/dashboard');
     }
-  }, [user, router]);
+  }, [user, loading, router]);
+  
+  // Auto-login for testing
+  useEffect(() => {
+      if (!loading && !user && auth) {
+          handleSignIn();
+      }
+  }, [loading, user, auth]);
 
-  const handleSignInWithGoogle = async () => {
-    const auth = useAuth().auth;
-    if (auth) {
-      const provider = new GoogleAuthProvider();
-      try {
-        await signInWithRedirect(auth, provider);
-      } catch (error) {
-        console.error('Error signing in with Google: ', error);
+  const handleSignIn = async () => {
+    if (!auth) return;
+    setError('');
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error('Error signing in:', error);
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+          setError('Неверный email или пароль.');
+      } else {
+          setError('Произошла ошибка при входе.');
       }
     }
   };
@@ -50,10 +65,20 @@ export default function LoginPage() {
           <CardDescription>Войдите, чтобы управлять вашими пациентами.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button className="w-full" onClick={handleSignInWithGoogle}>
-            <ChromeIcon className="mr-2 h-4 w-4" />
-            Войти через Google
-          </Button>
+          <div className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" placeholder="doctor@osteo.app" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="password">Пароль</Label>
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <Button onClick={handleSignIn} className="w-full">
+                Войти
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </main>

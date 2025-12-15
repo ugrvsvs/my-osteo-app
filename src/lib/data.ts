@@ -139,7 +139,13 @@ export const mockTemplates: Template[] = [
     description: 'Комплекс для улучшения подвижности плеч.',
     exercises: [
       { videoId: 'vid6', sets: 2, reps: 20 },
-      { videoId: 'vid3', sets: 2, reps: 15 },
+      { videoЯ: 'vid3', sets: 2, reps: 15 },
     ],
   },
 ];
+
+export const mockDoctor = {
+    id: 'doc1',
+    name: 'Доктор',
+    email: 'doctor@osteo.app'
+};
