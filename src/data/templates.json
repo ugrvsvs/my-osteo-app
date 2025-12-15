@@ -38,5 +38,17 @@
         "reps": 15
       }
     ]
+  },
+  {
+    "id": "tpl1765834452462",
+    "name": "dd",
+    "description": "dd",
+    "exercises": [
+      {
+        "videoId": "vid1765833749184",
+        "sets": 3,
+        "reps": 10
+      }
+    ]
   }
 ]
