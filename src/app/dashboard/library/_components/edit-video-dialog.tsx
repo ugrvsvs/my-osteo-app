@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -21,28 +21,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Video, VideoCategory } from '@/lib/types';
 
-export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: () => void, allCategories: VideoCategory[] }) {
+interface EditVideoDialogProps {
+  video: Video;
+  onVideoUpdated: () => void;
+  allCategories: VideoCategory[];
+  children: React.ReactNode;
+}
+
+export function EditVideoDialog({ video, onVideoUpdated, allCategories, children }: EditVideoDialogProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
-  const initialFormState = {
-    title: '',
-    description: '',
-    url: '',
-    thumbnailUrl: '',
-    duration: '',
-    zone: 'general',
-    level: 'beginner',
-    categoryId: undefined,
-  }
-  
-  const [formState, setFormState] = useState<Omit<Video, 'id'>>(initialFormState);
-  
+  const [formState, setFormState] = useState(video);
+
+  useEffect(() => {
+    // Update state if the video prop changes
+    setFormState(video);
+  }, [video]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormState(prev => ({ ...prev, [name]: value }));
@@ -57,8 +57,8 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/videos', {
-        method: 'POST',
+      const response = await fetch(`/api/videos/${video.id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -67,16 +67,15 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Не удалось добавить видео');
+        throw new Error(errorData.message || 'Не удалось обновить видео');
       }
 
       toast({
-        title: 'Видео добавлено',
-        description: `Видео "${formState.title}" было успешно добавлено в библиотеку.`,
+        title: 'Видео обновлено',
+        description: `Видео "${formState.title}" было успешно обновлено.`,
       });
-      onVideoAdded();
+      onVideoUpdated();
       setOpen(false);
-      setFormState(initialFormState);
     } catch (error) {
       console.error(error);
       toast({
@@ -92,17 +91,14 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <PlusCircle />
-          Добавить видео
-        </Button>
+        {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Добавить новое видео</DialogTitle>
+            <DialogTitle>Редактировать видео</DialogTitle>
             <DialogDescription>
-              Заполните информацию о новом видео-упражнении.
+              Измените информацию о видео-упражнении.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
@@ -188,7 +184,7 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Сохранение...' : 'Сохранить видео'}
+              {isSubmitting ? 'Сохранение...' : 'Сохранить изменения'}
             </Button>
           </DialogFooter>
         </form>

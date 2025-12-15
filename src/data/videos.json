@@ -1,6 +1,5 @@
-
 [
-    {
+  {
     "id": "vid1",
     "title": "Наклоны таза",
     "description": "Упражнение для укрепления мышц кора и снятия напряжения в пояснице.",
@@ -64,5 +63,16 @@
     "zone": "shoulder",
     "level": "intermediate",
     "categoryId": "cat2"
+  },
+  {
+    "id": "vid1765831401367",
+    "title": "Визуальный осмотр. Остеопатия и остеопатические процедуры.",
+    "description": "\nУход и лечение: медицинские процедуры",
+    "url": "https://rutube.ru/video/4fab120f928471095a11a0de8bfaf580/",
+    "thumbnailUrl": "https://picsum.photos/seed/1765831401367/1280/720",
+    "duration": "7",
+    "zone": "spine",
+    "level": "beginner",
+    "categoryId": "cat1"
   }
 ]

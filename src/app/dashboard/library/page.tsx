@@ -2,7 +2,7 @@
 import type { Video, VideoCategory } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Clock, GripVertical, Plus } from 'lucide-react';
+import { Search, Clock, GripVertical } from 'lucide-react';
 import Image from 'next/image';
 import useSWR from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,12 +10,13 @@ import { AddVideoDialog } from './_components/add-video-dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AddCategoryDialog } from './_components/add-category-dialog';
 import { useState } from 'react';
+import { EditVideoDialog } from './_components/edit-video-dialog';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-function VideoListItem({ video }: { video: Video }) {
+function VideoListItem({ video, allCategories, onVideoUpdated }: { video: Video; allCategories: VideoCategory[]; onVideoUpdated: () => void; }) {
   return (
-    <div className="flex items-center gap-4 p-2 rounded-md hover:bg-muted/50">
+    <div className="flex items-center gap-4 p-2 rounded-md hover:bg-muted/50 group">
       <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
       <Image
         src={video.thumbnailUrl}
@@ -33,7 +34,9 @@ function VideoListItem({ video }: { video: Video }) {
         <Clock className="h-4 w-4" />
         <span>{video.duration}</span>
       </div>
-      <Button variant="ghost" size="sm">Редактировать</Button>
+      <EditVideoDialog video={video} allCategories={allCategories} onVideoUpdated={onVideoUpdated}>
+        <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">Редактировать</Button>
+      </EditVideoDialog>
     </div>
   );
 }
@@ -115,7 +118,7 @@ export default function LibraryPage() {
                <AccordionContent className="p-2 pt-0">
                   <div className="flex flex-col gap-1">
                     {(videosByCategory[category.id] || []).map(video => (
-                      <VideoListItem key={video.id} video={video} />
+                      <VideoListItem key={video.id} video={video} allCategories={categories} onVideoUpdated={handleMutateAll} />
                     ))}
                      {(!videosByCategory[category.id] || videosByCategory[category.id].length === 0) && (
                        <p className="p-4 text-center text-sm text-muted-foreground">В этой категории пока нет видео.</p>
@@ -131,7 +134,7 @@ export default function LibraryPage() {
                <AccordionContent className="p-2 pt-0">
                   <div className="flex flex-col gap-1">
                     {uncategorizedVideos.map(video => (
-                      <VideoListItem key={video.id} video={video} />
+                      <VideoListItem key={video.id} video={video} allCategories={categories} onVideoUpdated={handleMutateAll} />
                     ))}
                     {uncategorizedVideos.length === 0 && (
                        <p className="p-4 text-center text-sm text-muted-foreground">Нет видео без категории.</p>
