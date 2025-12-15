@@ -1,4 +1,3 @@
-
 [
   {
     "id": "1",
@@ -8,12 +7,32 @@
     "shareId": "share-anna-123",
     "lastActivity": "2024-07-20T10:00:00Z",
     "assignedExercises": [
-      { "videoId": "vid1", "order": 1, "sets": 3, "reps": 15 },
-      { "videoId": "vid2", "order": 2, "sets": 3, "reps": 12 }
+      {
+        "videoId": "vid1",
+        "order": 1,
+        "sets": 3,
+        "reps": 15
+      },
+      {
+        "videoId": "vid2",
+        "order": 2,
+        "sets": 3,
+        "reps": 12
+      }
     ],
     "activityLog": [
-      { "id": "log1", "videoId": "vid1", "timestamp": "2024-07-20T10:05:00Z", "action": "opened" },
-      { "id": "log2", "videoId": "vid1", "timestamp": "2024-07-20T10:10:00Z", "action": "completed" }
+      {
+        "id": "log1",
+        "videoId": "vid1",
+        "timestamp": "2024-07-20T10:05:00Z",
+        "action": "opened"
+      },
+      {
+        "id": "log2",
+        "videoId": "vid1",
+        "timestamp": "2024-07-20T10:10:00Z",
+        "action": "completed"
+      }
     ]
   },
   {
@@ -24,11 +43,27 @@
     "shareId": "share-ivan-456",
     "lastActivity": "2024-07-19T15:30:00Z",
     "assignedExercises": [
-        { "videoId": "vid3", "order": 1, "sets": 3, "reps": 10, "comments": "Делать медленно, следить за дыханием." },
-        { "videoId": "vid6", "order": 2, "sets": 2, "reps": 20 }
+      {
+        "videoId": "vid3",
+        "order": 1,
+        "sets": 3,
+        "reps": 10,
+        "comments": "Делать медленно, следить за дыханием."
+      },
+      {
+        "videoId": "vid6",
+        "order": 2,
+        "sets": 2,
+        "reps": 20
+      }
     ],
     "activityLog": [
-      { "id": "log3", "videoId": "vid3", "timestamp": "2024-07-19T15:35:00Z", "action": "opened" }
+      {
+        "id": "log3",
+        "videoId": "vid3",
+        "timestamp": "2024-07-19T15:35:00Z",
+        "action": "opened"
+      }
     ]
   },
   {
@@ -48,9 +83,29 @@
     "shareId": "share-dmitry-012",
     "lastActivity": "2024-07-18T09:00:00Z",
     "assignedExercises": [
-        { "videoId": "vid4", "order": 1, "sets": 2, "reps": 15, "duration": "30s" },
-        { "videoId": "vid5", "order": 2, "sets": 3, "reps": 20 }
+      {
+        "videoId": "vid4",
+        "order": 1,
+        "sets": 2,
+        "reps": 15,
+        "duration": "30s"
+      },
+      {
+        "videoId": "vid5",
+        "order": 2,
+        "sets": 3,
+        "reps": 20
+      }
     ],
+    "activityLog": []
+  },
+  {
+    "id": "1765818054096",
+    "name": "Олег",
+    "email": "olegcom@hotmail.com",
+    "avatarUrl": "https://picsum.photos/seed/1765818054097/400/400",
+    "shareId": "share-олег-ms843",
+    "assignedExercises": [],
     "activityLog": []
   }
 ]

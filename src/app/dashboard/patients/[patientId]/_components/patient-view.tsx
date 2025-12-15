@@ -44,9 +44,19 @@ export function PatientView({
   const [assignedExercises, setAssignedExercises] = useState(initialAssignedExercises);
   const [summary, setSummary] = useState('');
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
   const addExercise = (video: Video) => {
+    // Check if the exercise is already in the plan
+    if (assignedExercises.some(ex => ex.videoId === video.id)) {
+      toast({
+        variant: 'destructive',
+        title: 'Упражнение уже добавлено',
+        description: 'Это упражнение уже есть в плане лечения.',
+      });
+      return;
+    }
     const newExercise: AssignedExerciseWithVideo = {
       videoId: video.id,
       order: assignedExercises.length + 1,
@@ -107,6 +117,39 @@ export function PatientView({
     }
   };
 
+  const handleSavePlan = async () => {
+    setIsSaving(true);
+    try {
+      const exercisePlanToSave = assignedExercises.map(({ video, ...rest }) => rest);
+      
+      const response = await fetch(`/api/patients/${patient.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignedExercises: exercisePlanToSave }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Не удалось сохранить план.');
+      }
+
+      toast({
+        title: 'План сохранен',
+        description: `План лечения для ${patient.name} был успешно обновлен.`,
+      });
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Ошибка',
+        description: error instanceof Error ? error.message : 'Произошла ошибка при сохранении.',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 h-full flex-1">
       {/* Left Column */}
@@ -151,7 +194,9 @@ export function PatientView({
             <CardTitle className="flex items-center gap-2">
               <ClipboardList /> План лечения
             </CardTitle>
-            <Button size="sm"><Save /> Сохранить план</Button>
+            <Button size="sm" onClick={handleSavePlan} disabled={isSaving}>
+                {isSaving ? 'Сохранение...' : <><Save /> Сохранить план</>}
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden">
