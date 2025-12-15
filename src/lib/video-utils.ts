@@ -18,7 +18,7 @@ export async function getThumbnailFromUrl(url: string): Promise<string | null> {
       const videoId = rutubeMatch[1];
       const part1 = videoId.substring(0, 2);
       const part2 = videoId.substring(2, 4);
-      // Corrected the domain to pic.rutube.ru
+      // Using the correct domain as pointed out
       return `https://pic.rutube.ru/video/${part1}/${part2}/${videoId}.jpg`;
     }
 
