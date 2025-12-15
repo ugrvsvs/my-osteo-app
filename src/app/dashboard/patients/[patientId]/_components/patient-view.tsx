@@ -289,9 +289,9 @@ export function PatientView({
           <TabsContent value="templates" className="flex-1">
              <ScrollArea className="h-full">
                 <div className="flex flex-col gap-2 p-4 pt-0">
-                  {!allTemplates && <p>Загрузка...</p>}
-                  {allTemplates && allTemplates.length === 0 && <p className="text-muted-foreground text-sm p-4">Шаблоны не найдены.</p>}
-                  {allTemplates && allTemplates.map(template => (
+                  {allTemplates.length === 0 ? (
+                     <p className="text-muted-foreground text-sm p-4">Шаблоны не найдены.</p>
+                  ) : allTemplates.map(template => (
                     <Card key={template.id} className="p-3">
                       <p className="font-semibold">{template.name}</p>
                       <p className="text-sm text-muted-foreground mb-2">{template.description}</p>
