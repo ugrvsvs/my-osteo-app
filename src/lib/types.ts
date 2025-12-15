@@ -8,6 +8,12 @@ export type Video = {
   zone: 'spine' | 'knee' | 'shoulder' | 'foot' | 'hand' | 'general' | string;
   level: 'beginner' | 'intermediate' | 'advanced' | string;
   limitations?: string;
+  categoryId?: string;
+};
+
+export type VideoCategory = {
+  id: string;
+  name: string;
 };
 
 export type AssignedExercise = {

@@ -23,9 +23,9 @@ import {
 } from '@/components/ui/select';
 import { PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { Video } from '@/lib/types';
+import type { Video, VideoCategory } from '@/lib/types';
 
-export function AddVideoDialog({ onVideoAdded }: { onVideoAdded: () => void }) {
+export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: () => void, allCategories: VideoCategory[] }) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -38,6 +38,7 @@ export function AddVideoDialog({ onVideoAdded }: { onVideoAdded: () => void }) {
     duration: '',
     zone: 'general',
     level: 'beginner',
+    categoryId: '',
   }
   
   const [formState, setFormState] = useState(initialFormState);
@@ -47,7 +48,7 @@ export function AddVideoDialog({ onVideoAdded }: { onVideoAdded: () => void }) {
     setFormState(prev => ({ ...prev, [name]: value }));
   }
 
-  const handleSelectChange = (name: 'zone' | 'level', value: string) => {
+  const handleSelectChange = (name: 'zone' | 'level' | 'categoryId', value: string) => {
     setFormState(prev => ({ ...prev, [name]: value }));
   };
 
@@ -134,6 +135,22 @@ export function AddVideoDialog({ onVideoAdded }: { onVideoAdded: () => void }) {
                 Длительность
               </Label>
               <Input id="duration" name="duration" value={formState.duration} onChange={handleInputChange} className="col-span-3" required placeholder="например, 5:30"/>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="categoryId" className="text-right">
+                Категория
+              </Label>
+              <Select name="categoryId" value={formState.categoryId} onValueChange={(value) => handleSelectChange('categoryId', value)}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Выберите категорию" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Без категории</SelectItem>
+                  {allCategories?.map(category => (
+                    <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="zone" className="text-right">
