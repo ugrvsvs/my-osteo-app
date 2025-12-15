@@ -27,9 +27,11 @@ export function SmartGenerator({ onAddExercise }: { onAddExercise: (video: Video
     try {
       const prompt = formData.get('prompt') as string;
       if (!prompt) return { error: 'Запрос не может быть пустым.' };
+      // The `availableVideos` parameter is now handled on the server-side within the `suggestExercises` function.
       const suggestions = await suggestExercises({ prompt });
       return { suggestions };
     } catch (e) {
+      console.error(e);
       return { error: 'Не удалось сгенерировать упражнения.' };
     }
   }, initialState);
@@ -66,11 +68,7 @@ export function SmartGenerator({ onAddExercise }: { onAddExercise: (video: Video
                             <p className="font-semibold text-xs">{exercise.title}</p>
                             <p className="text-xs text-muted-foreground line-clamp-1">{exercise.description}</p>
                         </div>
-                        {/* The AI might suggest videos not in our library.
-                            This button is illustrative of adding a real video.
-                            For this demo, it is disabled.
-                        */}
-                        <Button size="icon" variant="outline" className="h-8 w-8" disabled>
+                        <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => onAddExercise(exercise as Video)}>
                             <Plus className="h-4 w-4"/>
                         </Button>
                     </div>
