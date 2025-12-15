@@ -3,12 +3,13 @@ import type { Video } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, Search, Clock } from 'lucide-react';
+import { Search, Clock } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Icons } from '@/components/app/icons';
 import useSWR from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AddVideoDialog } from './_components/add-video-dialog';
 
 const zoneTranslations: Record<string, string> = {
   spine: 'Позвоночник',
@@ -67,7 +68,7 @@ function VideoCard({ video }: { video: Video }) {
 }
 
 export default function LibraryPage() {
-  const { data: videos, error, isLoading } = useSWR<Video[]>('/api/videos', fetcher);
+  const { data: videos, error, isLoading, mutate } = useSWR<Video[]>('/api/videos', fetcher);
 
   return (
     <div className="flex flex-col gap-6">
@@ -78,10 +79,7 @@ export default function LibraryPage() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input type="search" placeholder="Поиск видео..." className="pl-8 sm:w-[300px]" />
           </div>
-          <Button>
-            <PlusCircle />
-            Добавить видео
-          </Button>
+          <AddVideoDialog onVideoAdded={mutate} />
         </div>
       </div>
       
