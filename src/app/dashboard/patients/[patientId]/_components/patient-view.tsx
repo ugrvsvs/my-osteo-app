@@ -208,7 +208,7 @@ export function PatientView({
           </CardHeader>
           <CardContent>
             <Button variant="outline" className="w-full" asChild>
-                <a href={`/p/${patient.shareId}`} target="_blank">Страница пациента</a>
+                <a href={`/p/${patient.shareId}`} target="_blank" rel="noopener noreferrer">Страница пациента</a>
             </Button>
           </CardContent>
         </Card>
