@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AddVideoDialog } from './_components/add-video-dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AddCategoryDialog } from './_components/add-category-dialog';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { EditVideoDialog } from './_components/edit-video-dialog';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -54,21 +54,26 @@ export default function LibraryPage() {
     mutateCategories();
   };
 
-  const filteredVideos = videos?.filter(video => 
-    video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    video.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredVideos = useMemo(() => {
+    if (!videos) return [];
+    return videos.filter(video => 
+      video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (video.description && video.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [videos, searchTerm]);
   
-  const videosByCategory = filteredVideos?.reduce((acc, video) => {
-    const categoryId = video.categoryId || 'uncategorized';
-    if (!acc[categoryId]) {
-      acc[categoryId] = [];
-    }
-    acc[categoryId].push(video);
-    return acc;
-  }, {} as Record<string, Video[]>);
+  const videosByCategory = useMemo(() => {
+    return filteredVideos.reduce((acc, video) => {
+      const categoryId = video.categoryId || 'uncategorized';
+      if (!acc[categoryId]) {
+        acc[categoryId] = [];
+      }
+      acc[categoryId].push(video);
+      return acc;
+    }, {} as Record<string, Video[]>);
+  }, [filteredVideos]);
 
-  const uncategorizedVideos = videosByCategory?.['uncategorized'] || [];
+  const uncategorizedVideos = videosByCategory['uncategorized'] || [];
   
   const isLoading = videosLoading || categoriesLoading;
   const error = videosError || categoriesError;
@@ -108,7 +113,7 @@ export default function LibraryPage() {
       )}
       {error && <p className="text-destructive">Не удалось загрузить данные библиотеки.</p>}
 
-      {!isLoading && videosByCategory && (
+      {!isLoading && (
         <Accordion type="multiple" defaultValue={categories.map(c => c.id).concat(['uncategorized'])} className="w-full space-y-4">
            {categories.map(category => (
              <AccordionItem value={category.id} key={category.id} className="border rounded-md bg-card overflow-hidden">
