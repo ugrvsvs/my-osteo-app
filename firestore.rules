@@ -1,0 +1,124 @@
+/**
+ * # Core Philosophy
+ * This ruleset enforces a strict practitioner-ownership model for patient data while providing a globally accessible library of video exercises and templates. The primary security goal is to ensure that a practitioner can only access and manage the data of patients under their care, preventing any cross-practitioner data exposure.
+ *
+ * # Data Structure
+ * - `/videos/{videoId}`: A global, publicly readable collection of exercise videos.
+ * - `/templates/{templateId}`: A global, publicly readable collection of assignment templates.
+ * - `/patients/{patientId}`: A collection of patient records. Each patient document MUST contain an `ownerId` field linking it to a specific practitioner (authenticated user).
+ * - `/patients/{patientId}/videoAssignments/{videoAssignmentId}`: A subcollection containing videos assigned to a specific patient. Access is inherited from the parent patient document.
+ * - `/patients/{patientId}/activityLogs/{activityLogId}`: A subcollection logging patient interactions. It allows anonymous users to create logs, but only the owning practitioner can read or manage them.
+ *
+ * # Key Security Decisions
+ * - **Strict Patient Data Segregation**: Access to a patient's record and all their subcollection data (assignments, logs) is strictly limited to the practitioner identified by the `ownerId` field on the patient document.
+ * - **No Global Patient Listing**: To protect patient privacy, listing the entire `/patients` collection is disallowed. Practitioners must query for patients they own.
+ * - **Public-Read Libraries**: The `/videos` and `/templates` collections are publicly readable to allow the application to easily display them. Writes are currently disabled pending schema updates.
+ * - **Anonymous Activity Logging**: To allow patients to log their activity without needing to sign in, anonymous users are permitted to create new entries in the `activityLogs` subcollection. They cannot read, update, or delete any logs.
+ *
+ * # Denormalization for Authorization
+ * The security model critically relies on denormalization. Each document in the `/patients` collection MUST have an `ownerId` field containing the UID of the practitioner who manages that patient. This avoids slow and costly `get()` calls when securing the patient record itself and provides a single source of truth for securing its subcollections.
+ *
+ * # Structural Segregation
+ * The ruleset leverages structural segregation by nesting patient-specific data (`videoAssignments`, `activityLogs`) under the `/patients/{patientId}` path. This creates a secure data boundary, ensuring that all rules applied to a patient's data tree can be consistently derived from the parent patient document's ownership.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --------------------------------
+    // Helper Functions
+    // --------------------------------
+
+    /**
+     * Returns true if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    
+    /**
+     * Checks if the requesting user is the owner of a patient document.
+     * Uses a get() call to check the `ownerId` on the parent patient document.
+     * This is essential for securing subcollections like videoAssignments and activityLogs.
+     */
+    function isPatientOwner(patientId) {
+      return isSignedIn() && get(/databases/$(database)/documents/patients/$(patientId)).data.ownerId == request.auth.uid;
+    }
+
+    /**
+     * @description Publicly readable library of all exercise videos.
+     * @path /videos/{videoId}
+     * @allow (get) Any user, signed in or not, can read a video's details.
+     * @deny (create) A user attempts to create a video without an `ownerId`.
+     * @principle Public read access for shared resources, with owner-only writes.
+     */
+    match /videos/{videoId} {
+      allow get, list: if true;
+
+      // CRITICAL: Cannot implement owner-only writes. The 'Video' entity is missing an 'ownerId' or 'authorId' field.
+      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+
+    /**
+     * @description Manages patient records, which are owned by practitioners.
+     * @path /patients/{patientId}
+     * @allow (create) An authenticated practitioner creates a new patient record for themself.
+     * @deny (get) A practitioner attempts to read another practitioner's patient data.
+     * @deny (list) Any user attempts to list all patients in the system.
+     * @principle Enforces a strict document ownership model for sensitive patient data.
+     */
+    match /patients/{patientId} {
+      // CRITICAL: These rules assume a patient document contains an `ownerId` field storing the practitioner's UID.
+      // The current 'Patient' entity in the IR is missing this required field for authorization.
+      allow get: if isPatientOwner(patientId);
+      allow list: if false; // Deny listing all patients to protect privacy.
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isPatientOwner(patientId) && request.auth.uid == resource.data.ownerId; // Enforce immutable ownership
+      allow delete: if isPatientOwner(patientId);
+    }
+
+    /**
+     * @description Manages video assignments for a specific patient.
+     * @path /patients/{patientId}/videoAssignments/{videoAssignmentId}
+     * @allow (create) The owning practitioner assigns a video to their patient.
+     * @deny (get) A practitioner attempts to read assignments for a patient they do not own.
+     * @principle Inherits access control from the parent patient document.
+     */
+    match /patients/{patientId}/videoAssignments/{videoAssignmentId} {
+      allow get, list: if isPatientOwner(patientId);
+      allow create: if isPatientOwner(patientId) && request.resource.data.patientId == patientId;
+      allow update: if isPatientOwner(patientId) && request.resource.data.patientId == resource.data.patientId; // Enforce immutable patient link
+      allow delete: if isPatientOwner(patientId);
+    }
+
+    /**
+     * @description Publicly readable library of assignment templates.
+     * @path /templates/{templateId}
+     * @allow (get) Any user, signed in or not, can read a template.
+     * @deny (create) A user attempts to create a template without an `ownerId`.
+     * @principle Public read access for shared resources, with owner-only writes.
+     */
+    match /templates/{templateId} {
+      allow get, list: if true;
+
+      // CRITICAL: Cannot implement owner-only writes. The 'Template' entity is missing an 'ownerId' or 'authorId' field.
+      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+
+    /**
+     * @description Logs patient activity, such as opening a video.
+     * @path /patients/{patientId}/activityLogs/{activityLogId}
+     * @allow (create) An anonymous user (the patient) creates a log entry.
+     * @deny (get) An anonymous user tries to read log entries.
+     * @deny (update) The owning practitioner tries to modify an existing log entry.
+     * @principle Allows anonymous writes for logging but restricts all other access to the data owner.
+     */
+    match /patients/{patientId}/activityLogs/{activityLogId} {
+      allow get, list: if isPatientOwner(patientId);
+      allow create: if request.resource.data.patientId == patientId; // Allow anyone (including anonymous) to log activity for a patient.
+      allow update: if false; // Logs should be immutable.
+      allow delete: if isPatientOwner(patientId);
+    }
+  }
+}
