@@ -17,7 +17,7 @@ import { CreditCard, LogOut, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export function UserNav() {
-  const { auth } = useAuth();
+  const { auth } = useAuth() ?? {};
   const { user } = useUser();
   const router = useRouter();
 
@@ -78,3 +78,5 @@ export function UserNav() {
     </DropdownMenu>
   );
 }
+
+    

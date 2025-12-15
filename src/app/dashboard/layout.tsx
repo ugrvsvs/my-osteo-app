@@ -21,16 +21,16 @@ import { Button } from '@/components/ui/button';
 import { useUser } from '@/firebase';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { user, loading } = useUser();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isUserLoading && !user) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [user, isUserLoading, router]);
   
-  if (loading || !user) {
+  if (isUserLoading || !user) {
     return (
         <div className="flex min-h-screen items-center justify-center">
             <p>Загрузка...</p>
@@ -81,3 +81,5 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
+
+    

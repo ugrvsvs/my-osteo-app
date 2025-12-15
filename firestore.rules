@@ -1,26 +1,4 @@
-/**
- * # Core Philosophy
- * This ruleset enforces a strict practitioner-ownership model for patient data while providing a globally accessible library of video exercises and templates. The primary security goal is to ensure that a practitioner can only access and manage the data of patients under their care, preventing any cross-practitioner data exposure.
- *
- * # Data Structure
- * - `/videos/{videoId}`: A global, publicly readable collection of exercise videos.
- * - `/templates/{templateId}`: A global, publicly readable collection of assignment templates.
- * - `/patients/{patientId}`: A collection of patient records. Each patient document MUST contain an `ownerId` field linking it to a specific practitioner (authenticated user).
- * - `/patients/{patientId}/videoAssignments/{videoAssignmentId}`: A subcollection containing videos assigned to a specific patient. Access is inherited from the parent patient document.
- * - `/patients/{patientId}/activityLogs/{activityLogId}`: A subcollection logging patient interactions. It allows anonymous users to create logs, but only the owning practitioner can read or manage them.
- *
- * # Key Security Decisions
- * - **Strict Patient Data Segregation**: Access to a patient's record and all their subcollection data (assignments, logs) is strictly limited to the practitioner identified by the `ownerId` field on the patient document.
- * - **No Global Patient Listing**: To protect patient privacy, listing the entire `/patients` collection is disallowed. Practitioners must query for patients they own.
- * - **Public-Read Libraries**: The `/videos` and `/templates` collections are publicly readable to allow the application to easily display them. Writes are currently disabled pending schema updates.
- * - **Anonymous Activity Logging**: To allow patients to log their activity without needing to sign in, anonymous users are permitted to create new entries in the `activityLogs` subcollection. They cannot read, update, or delete any logs.
- *
- * # Denormalization for Authorization
- * The security model critically relies on denormalization. Each document in the `/patients` collection MUST have an `ownerId` field containing the UID of the practitioner who manages that patient. This avoids slow and costly `get()` calls when securing the patient record itself and provides a single source of truth for securing its subcollections.
- *
- * # Structural Segregation
- * The ruleset leverages structural segregation by nesting patient-specific data (`videoAssignments`, `activityLogs`) under the `/patients/{patientId}` path. This creates a secure data boundary, ensuring that all rules applied to a patient's data tree can be consistently derived from the parent patient document's ownership.
- */
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -122,3 +100,4 @@ service cloud.firestore {
     }
   }
 }
+    

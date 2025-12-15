@@ -196,8 +196,7 @@
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "password"
     ]
   },
   "firestore": {
@@ -294,3 +293,4 @@
     "reasoning": "The Firestore structure is designed to provide a secure, scalable, and debuggable solution for the 'Мой Остео' application, prioritizing authorization independence and clarity.  It addresses all app requirements, including video library management, patient management, personalized video assignments, template creation, patient access, activity logging, and the GenAI-powered complex generator tool.\n\n**Authorization Independence:**\nAuthorization Independence is achieved by adhering to strategy A, denormalizing authorization data.  For example, access to `videoAssignments` and `activityLogs` depends on the `patientId`. These collections are located under `/patients/{patientId}`, leveraging path-based ownership. This eliminates the need for `get()` calls in security rules to validate patient access, streamlining security rules and ensuring atomic operations. For collaborative entities, such as templates shared among practitioners (if needed in future), membership maps (`members: {uid: role}`) would be denormalized into documents to avoid `get()` calls, though this is not required in the current implementation.\n\n**Structural Segregation:**\nThe structure uses structural segregation (Strategy B) by placing related data under user-specific collections, such as `patients/{patientId}/videoAssignments`. This segregation ensures that all documents within a collection share the same security requirements. Public data, like the videos themselves, is stored separately in the `videos` collection with more open read access, and can be restricted if needed.\n\n**Access Modeling:**\nAccess modeling (Strategy C) follows consistent patterns:\n*   **Path-Based Ownership:** `/patients/{patientId}` and subcollections enforce ownership.  Only the authenticated user (practitioner) can manage patients and their associated data.\n*   **Global Roles (DBAC):** While not explicitly needed based on the requirements, a `roles_admin/{uid}` collection could be used to store administrator roles, checked by existence rather than content in security rules.\n\n**QAPs Support:**\nThe structure supports secure `list` operations (QAPs) through structural segregation. Listing video assignments for a patient is secured by path-based ownership: only the practitioner can list assignments under `/patients/{patientId}/videoAssignments`. Access to `videos` can be controlled to permit reads only, or limited to specific roles if necessary.\n\n**Invariants:**\nThe structure supports data invariants like ownership and timestamps. The `patientId` in `videoAssignments` is immutable due to the path-based ownership enforced by security rules. Timestamps within `activityLogs` can be validated using `request.time` in security rules.\n"
   }
 }
+    

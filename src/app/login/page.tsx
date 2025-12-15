@@ -5,30 +5,31 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function LoginPage() {
-  const { user, loading, auth } = useAuth();
+  const { auth } = useAuth() ?? {};
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [email, setEmail] = useState('doctor@osteo.app');
   const [password, setPassword] = useState('password123');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!isUserLoading && user) {
       router.push('/dashboard');
     }
-  }, [user, loading, router]);
+  }, [user, isUserLoading, router]);
   
   // Auto-login for testing
   useEffect(() => {
-      if (!loading && !user && auth) {
+      if (!isUserLoading && !user && auth) {
           handleSignIn();
       }
-  }, [loading, user, auth]);
+  }, [isUserLoading, user, auth]);
 
   const handleSignIn = async () => {
     if (!auth) return;
@@ -38,15 +39,15 @@ export default function LoginPage() {
       router.push('/dashboard');
     } catch (error: any) {
       console.error('Error signing in:', error);
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-          setError('Неверный email или пароль.');
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential' || error.code === 'auth/configuration-not-found') {
+          setError('Неверный email или пароль, или конфигурация не найдена.');
       } else {
           setError('Произошла ошибка при входе.');
       }
     }
   };
 
-  if (loading || user) {
+  if (isUserLoading || user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p>Загрузка...</p>
@@ -84,3 +85,5 @@ export default function LoginPage() {
     </main>
   );
 }
+
+    
