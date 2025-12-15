@@ -131,23 +131,10 @@
     "shareId": "share-олег-ms843",
     "assignedExercises": [
       {
-        "videoId": "vid1",
+        "videoId": "vid1765831401367",
+        "order": 1,
         "sets": 3,
-        "reps": 15,
-        "order": 1
-      },
-      {
-        "videoId": "vid2",
-        "sets": 3,
-        "reps": 12,
-        "order": 2
-      },
-      {
-        "videoId": "vid4",
-        "sets": 2,
-        "reps": 10,
-        "duration": "30s",
-        "order": 3
+        "reps": 12
       }
     ],
     "activityLog": []

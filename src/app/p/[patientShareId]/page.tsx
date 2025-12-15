@@ -28,7 +28,8 @@ async function readData<T>(filePath: string): Promise<T[]> {
 
 async function getPatientPlan(patientShareId: string): Promise<PatientWithExercises | null> {
     try {
-        if (!patientShareId) return null;
+        const decodedShareId = decodeURIComponent(patientShareId);
+        if (!decodedShareId) return null;
         
         const patientsPath = path.join(process.cwd(), 'src', 'data', 'patients.json');
         const videosPath = path.join(process.cwd(), 'src', 'data', 'videos.json');
@@ -38,7 +39,7 @@ async function getPatientPlan(patientShareId: string): Promise<PatientWithExerci
           readData<Video>(videosPath)
         ]);
 
-        const patient = patients.find(p => p.shareId === patientShareId);
+        const patient = patients.find(p => p.shareId === decodedShareId);
 
         if (!patient) {
           return null;
