@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Patient, Video, AssignedExercise, Template, ActivityLog } from '@/lib/types';
+import type { Patient, Video, AssignedExercise, Template } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,12 +17,9 @@ import {
   Plus,
   Save,
   Trash2,
-  VideoIcon,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
 
 type AssignedExerciseWithVideo = AssignedExercise & { video: Video };
 
@@ -31,7 +28,7 @@ function getInitials(name: string) {
   return names.length > 1 ? `${names[0][0]}${names[1][0]}` : name.substring(0, 2);
 }
 
-function getActivitySummary(activityLog: ActivityLog[], allVideos: Video[]) {
+function getActivitySummary(activityLog: Patient['activityLog'], allVideos: Video[]) {
     if (!activityLog || activityLog.length === 0) {
         return [];
     }
@@ -212,7 +209,7 @@ export function PatientView({
             <CardTitle className="flex items-center gap-2">
               <Activity /> Сводка Активности
             </CardTitle>
-            <CardDescription>Общая статистика по выполненным упражнениям.</CardDescription>
+            <CardDescription>Статистика по открытым упражнениям.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <ScrollArea className="h-48">

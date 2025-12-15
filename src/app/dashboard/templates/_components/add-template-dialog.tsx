@@ -117,7 +117,12 @@ export function AddTemplateDialog({ onTemplateAdded }: { onTemplateAdded: () => 
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+            setFormState(initialFormState);
+        }
+    }}>
       <DialogTrigger asChild>
         <Button>
           <PlusCircle />

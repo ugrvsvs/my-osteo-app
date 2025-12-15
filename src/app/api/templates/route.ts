@@ -21,7 +21,7 @@ async function getTemplates(): Promise<Template[]> {
 export async function GET() {
   try {
     const templates = await getTemplates();
-    return NextResponse.json({ templates });
+    return NextResponse.json(templates);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ message }, { status: 500 });

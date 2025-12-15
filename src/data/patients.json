@@ -131,7 +131,7 @@
     "shareId": "share-олег-ms843",
     "assignedExercises": [
       {
-        "videoId": "vid1765831401367",
+        "videoId": "vid1765833749184",
         "order": 1,
         "sets": 3,
         "reps": 12
@@ -149,8 +149,14 @@
         "videoId": "vid1765831401367",
         "timestamp": "2025-12-15T20:51:16.878Z",
         "action": "opened"
+      },
+      {
+        "id": "log1765834188546",
+        "videoId": "vid1765833749184",
+        "timestamp": "2025-12-15T21:29:48.546Z",
+        "action": "opened"
       }
     ],
-    "lastActivity": "2025-12-15T20:51:16.878Z"
+    "lastActivity": "2025-12-15T21:29:48.546Z"
   }
 ]

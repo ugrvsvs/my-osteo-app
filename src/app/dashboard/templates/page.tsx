@@ -7,13 +7,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Template } from '@/lib/types';
 import useSWR from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddTemplateDialog } from './_components/add-template-dialog';
-import { Icons } from '@/components/app/icons';
+import { FileStack } from 'lucide-react';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -21,17 +20,21 @@ function TemplateCard({ template }: { template: Template }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{template.name}</CardTitle>
-        <CardDescription>{template.description}</CardDescription>
+        <CardTitle className="text-lg">{template.name}</CardTitle>
+        {template.description && <CardDescription>{template.description}</CardDescription>}
       </CardHeader>
       <CardContent>
-        <div className="flex flex-wrap gap-2">
-          {template.exercises.map((ex, index) => (
-            <Badge key={index} variant="outline" className="flex items-center gap-1">
-              <Icons.spine className="h-3 w-3" />
-              <span>{`${ex.reps}x${ex.sets}`}</span>
-            </Badge>
-          ))}
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium text-muted-foreground">
+            Упражнений: {template.exercises.length}
+          </p>
+          <div className="flex flex-wrap gap-1">
+            {template.exercises.map((ex, index) => (
+              <Badge key={index} variant="secondary">
+                {`${ex.sets}x${ex.reps}`}
+              </Badge>
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -39,8 +42,7 @@ function TemplateCard({ template }: { template: Template }) {
 }
 
 export default function TemplatesPage() {
-  const { data, error, isLoading, mutate } = useSWR<{templates: Template[]}>('/api/templates', fetcher);
-  const templates = data?.templates;
+  const { data, error, isLoading, mutate } = useSWR<Template[]>('/api/templates', fetcher);
 
   return (
     <div className="flex flex-col gap-6">
@@ -70,18 +72,20 @@ export default function TemplatesPage() {
 
       {error && <p className="text-destructive">Не удалось загрузить шаблоны.</p>}
 
-      {!isLoading && templates && (
+      {!isLoading && data && (
         <>
-          {templates.length === 0 ? (
-            <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 py-24 text-center">
-              <div className="flex flex-col items-center gap-4 text-muted-foreground">
-                <h2 className="text-xl font-semibold">Шаблоны не найдены</h2>
-                <p>Создайте свой первый шаблон, чтобы ускорить назначение упражнений.</p>
+          {data.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 py-24 text-center">
+              <FileStack className="h-12 w-12 text-muted-foreground" />
+              <h2 className="mt-4 text-xl font-semibold">Шаблоны не найдены</h2>
+              <p className="text-muted-foreground">Создайте свой первый шаблон, чтобы ускорить назначение упражнений.</p>
+              <div className="mt-6">
+                <AddTemplateDialog onTemplateAdded={mutate} />
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {templates.map((template) => (
+              {data.map((template) => (
                 <TemplateCard key={template.id} template={template} />
               ))}
             </div>
