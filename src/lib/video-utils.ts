@@ -11,8 +11,8 @@ export async function getThumbnailFromUrl(url: string): Promise<string | null> {
       return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
     }
 
-    // Rutube
-    const rutubeRegex = /rutube\.ru\/video\/([a-f0-9]{32})\//;
+    // Rutube - Corrected Regex
+    const rutubeRegex = /rutube\.ru\/(?:video|play)\/([a-f0-9]{32})\/?/;
     const rutubeMatch = url.match(rutubeRegex);
     if (rutubeMatch && rutubeMatch[1]) {
       const videoId = rutubeMatch[1];
