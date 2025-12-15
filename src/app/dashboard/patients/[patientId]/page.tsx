@@ -2,18 +2,28 @@ import { notFound } from 'next/navigation';
 import { PatientView } from './_components/patient-view';
 import type { Patient, Video } from '@/lib/types';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import path from 'path';
+import fs from 'fs/promises';
 
-// This is now a Server Component to correctly handle params
+async function readData<T>(filePath: string): Promise<T[]> {
+  try {
+    const fileContent = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(fileContent);
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return [];
+    }
+    throw new Error(`Error reading data file: ${filePath}`);
+  }
+}
+
 
 async function getPatient(patientId: string): Promise<Patient | null> {
-  // In a real app, fetch from your database
-  // For this demo, we'll simulate a fetch.
   try {
-    const res = await fetch(`http://localhost:9002/api/patients/${patientId}`, { cache: 'no-store' });
-    if (!res.ok) {
-      return null;
-    }
-    return res.json();
+    const jsonPath = path.join(process.cwd(), 'src', 'data', 'patients.json');
+    const patients = await readData<Patient>(jsonPath);
+    const patient = patients.find(p => p.id === patientId);
+    return patient || null;
   } catch (error) {
     console.error("Failed to fetch patient:", error);
     return null;
@@ -22,11 +32,9 @@ async function getPatient(patientId: string): Promise<Patient | null> {
 
 async function getVideos(): Promise<Video[]> {
    try {
-    const res = await fetch('http://localhost:9002/api/videos', { cache: 'no-store' });
-    if (!res.ok) {
-      return [];
-    }
-    return res.json();
+    const jsonPath = path.join(process.cwd(), 'src', 'data', 'videos.json');
+    const videos = await readData<Video>(jsonPath);
+    return videos;
   } catch (error) {
     console.error("Failed to fetch videos:", error);
     return [];
