@@ -35,12 +35,6 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'pic.rutubelist.ru',
-        port: '',
-        pathname: '/**',
-      }
     ],
   },
 };
