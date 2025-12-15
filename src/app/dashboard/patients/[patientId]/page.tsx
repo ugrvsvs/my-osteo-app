@@ -1,28 +1,42 @@
-import { mockPatients, mockVideos } from '@/lib/data';
+'use client';
 import { notFound } from 'next/navigation';
 import { PatientView } from './_components/patient-view';
-import type { Patient } from '@/lib/types';
+import type { Patient, Video } from '@/lib/types';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc, collection } from 'firebase/firestore';
 
-// Simulate fetching data from a database
-async function getPatientData(patientId: string): Promise<Patient | undefined> {
-  return mockPatients.find((p) => p.id === patientId);
-}
+export default function PatientDetailPage({ params }: { params: { patientId: string } }) {
+  const firestore = useFirestore();
 
-export default async function PatientDetailPage({ params }: { params: { patientId: string } }) {
-  const patient = await getPatientData(params.patientId);
+  const patientRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'patients', params.patientId);
+  }, [firestore, params.patientId]);
+
+  const allVideosRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'videos');
+  }, [firestore]);
+
+  const { data: patient, isLoading: isPatientLoading } = useDoc<Patient>(patientRef);
+  const { data: allVideos, isLoading: areVideosLoading } = useCollection<Video>(allVideosRef);
+
+  if (isPatientLoading || areVideosLoading) {
+    return <p>Загрузка данных пациента...</p>;
+  }
 
   if (!patient) {
     notFound();
   }
   
-  const assignedVideosWithDetails = patient.assignedExercises
+  const assignedVideosWithDetails = (patient.assignedExercises || [])
     .map(assignment => {
-      const video = mockVideos.find(v => v.id === assignment.videoId);
+      const video = allVideos?.find(v => v.id === assignment.videoId);
       if (!video) return null;
       return { ...assignment, video };
     })
-    .filter(Boolean)
+    .filter((item): item is NonNullable<typeof item> => item !== null)
     .sort((a, b) => a.order - b.order);
 
   return (
@@ -38,7 +52,7 @@ export default async function PatientDetailPage({ params }: { params: { patientI
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PatientView patient={patient} initialAssignedExercises={assignedVideosWithDetails} allVideos={mockVideos} />
+      <PatientView patient={patient} initialAssignedExercises={assignedVideosWithDetails} allVideos={allVideos || []} />
     </div>
   );
 }

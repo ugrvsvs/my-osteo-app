@@ -5,8 +5,8 @@ export type Video = {
   url: string;
   thumbnailUrl: string;
   duration: string; // e.g., "5:30"
-  zone: 'spine' | 'knee' | 'shoulder' | 'foot' | 'hand' | 'general';
-  level: 'beginner' | 'intermediate' | 'advanced';
+  zone: 'spine' | 'knee' | 'shoulder' | 'foot' | 'hand' | 'general' | string;
+  level: 'beginner' | 'intermediate' | 'advanced' | string;
   limitations?: string;
 };
 

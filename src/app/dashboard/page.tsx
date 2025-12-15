@@ -1,4 +1,5 @@
-import { mockPatients } from '@/lib/data';
+'use client';
+
 import type { Patient } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -6,8 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { PlusCircle, Search, Clock } from 'lucide-react';
 import Link from 'next/link';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useCollection, useFirestore, useUser } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import { useMemo } from 'react';
 
 function PatientCard({ patient }: { patient: Patient }) {
   const getInitials = (name: string) => {
@@ -50,6 +54,16 @@ function PatientCard({ patient }: { patient: Patient }) {
 }
 
 export default function DashboardPage() {
+  const firestore = useFirestore();
+  const { user } = useUser();
+
+  const patientsQuery = useMemo(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'patients');
+  }, [firestore, user]);
+
+  const { data: patients, isLoading } = useCollection<Patient>(patientsQuery);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -66,11 +80,15 @@ export default function DashboardPage() {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {mockPatients.map((patient) => (
-          <PatientCard key={patient.id} patient={patient} />
-        ))}
-      </div>
+      {isLoading && <p>Загрузка пациентов...</p>}
+
+      {!isLoading && patients && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {patients.map((patient) => (
+            <PatientCard key={patient.id} patient={patient} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

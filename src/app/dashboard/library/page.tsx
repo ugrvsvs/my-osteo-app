@@ -1,4 +1,4 @@
-import { mockVideos } from '@/lib/data';
+'use client';
 import type { Video } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,8 +7,11 @@ import { PlusCircle, Search, Clock } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Icons } from '@/components/app/icons';
+import { useCollection, useFirestore, useUser } from '@/firebase';
+import { useMemo } from 'react';
+import { collection } from 'firebase/firestore';
 
-const zoneTranslations: Record<Video['zone'], string> = {
+const zoneTranslations: Record<string, string> = {
   spine: 'Позвоночник',
   knee: 'Колено',
   shoulder: 'Плечо',
@@ -17,14 +20,14 @@ const zoneTranslations: Record<Video['zone'], string> = {
   general: 'Общее'
 };
 
-const levelTranslations: Record<Video['level'], string> = {
+const levelTranslations: Record<string, string> = {
     beginner: 'Новичок',
     intermediate: 'Средний',
     advanced: 'Продвинутый'
 }
 
 function VideoCard({ video }: { video: Video }) {
-  const ZoneIcon = Icons[video.zone];
+  const ZoneIcon = Icons[video.zone as keyof typeof Icons];
 
   return (
     <Card className="flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -63,6 +66,16 @@ function VideoCard({ video }: { video: Video }) {
 }
 
 export default function LibraryPage() {
+  const firestore = useFirestore();
+
+  const videosQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'videos');
+  }, [firestore]);
+
+  const { data: videos, isLoading } = useCollection<Video>(videosQuery);
+
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -79,11 +92,15 @@ export default function LibraryPage() {
         </div>
       </div>
       
+      {isLoading && <p>Загрузка видео...</p>}
+
+      {!isLoading && videos && (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {mockVideos.map((video) => (
+        {videos.map((video) => (
           <VideoCard key={video.id} video={video} />
         ))}
       </div>
+      )}
     </div>
   );
 }
