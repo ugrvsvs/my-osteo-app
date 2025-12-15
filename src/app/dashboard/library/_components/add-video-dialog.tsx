@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -24,13 +25,14 @@ import {
 import { PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Video, VideoCategory } from '@/lib/types';
+import { getThumbnailFromUrl } from '@/lib/video-utils';
 
 export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: () => void, allCategories: VideoCategory[] }) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
-  const initialFormState = {
+  const initialFormState: Omit<Video, 'id'> = {
     title: '',
     description: '',
     url: '',
@@ -39,14 +41,24 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
     zone: 'general',
     level: 'beginner',
     categoryId: undefined,
-  }
+  };
   
   const [formState, setFormState] = useState<Omit<Video, 'id'>>(initialFormState);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormState(prev => ({ ...prev, [name]: value }));
-  }
+  };
+
+  const handleUrlBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    if (url && !formState.thumbnailUrl) { // Only fetch if thumbnail is not already set
+      const thumbnailUrl = await getThumbnailFromUrl(url);
+      if (thumbnailUrl) {
+        setFormState(prev => ({ ...prev, thumbnailUrl }));
+      }
+    }
+  };
 
   const handleSelectChange = (name: 'zone' | 'level' | 'categoryId', value: string) => {
     setFormState(prev => ({ ...prev, [name]: value === 'none' ? undefined : value }));
@@ -90,7 +102,12 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      setOpen(isOpen);
+      if (!isOpen) {
+        setFormState(initialFormState);
+      }
+    }}>
       <DialogTrigger asChild>
         <Button>
           <PlusCircle />
@@ -122,13 +139,13 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
               <Label htmlFor="url" className="text-right">
                 URL Видео
               </Label>
-              <Input id="url" name="url" value={formState.url} onChange={handleInputChange} className="col-span-3" required />
+              <Input id="url" name="url" value={formState.url} onChange={handleInputChange} onBlur={handleUrlBlur} className="col-span-3" required />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="thumbnailUrl" className="text-right">
                 URL Превью
               </Label>
-              <Input id="thumbnailUrl" name="thumbnailUrl" value={formState.thumbnailUrl} onChange={handleInputChange} className="col-span-3" placeholder="Необязательно" />
+              <Input id="thumbnailUrl" name="thumbnailUrl" value={formState.thumbnailUrl} onChange={handleInputChange} className="col-span-3" placeholder="Заполнится автоматически" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="duration" className="text-right">
