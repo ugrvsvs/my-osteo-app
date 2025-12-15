@@ -1,13 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import type { Patient, Video, AssignedExercise } from '@/lib/types';
+import type { Patient, Video, AssignedExercise, Template } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { mockTemplates } from '@/lib/data';
 import { SmartGenerator } from './smart-generator';
 import Image from 'next/image';
 import {
@@ -19,11 +17,11 @@ import {
   Plus,
   Save,
   Trash2,
-  Video as VideoIcon,
 } from 'lucide-react';
 import { summarizePatientActivity } from '@/ai/flows/summarize-patient-activity';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import useSWR from 'swr';
 
 type AssignedExerciseWithVideo = AssignedExercise & { video: Video };
 
@@ -31,6 +29,9 @@ function getInitials(name: string) {
   const names = name.split(' ');
   return names.length > 1 ? `${names[0][0]}${names[1][0]}` : name.substring(0, 2);
 }
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 
 export function PatientView({
   patient,
@@ -46,6 +47,9 @@ export function PatientView({
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  
+  const { data: templates, error: templatesError } = useSWR<Template[]>('/api/templates', fetcher);
+
 
   const addExercise = (video: Video) => {
     // Check if the exercise is already in the plan
@@ -89,6 +93,42 @@ export function PatientView({
 
     setAssignedExercises(newExercises.map((ex, idx) => ({ ...ex, order: idx + 1 })));
   };
+
+  const applyTemplate = (template: Template) => {
+    const exercisesFromTemplate: AssignedExerciseWithVideo[] = template.exercises
+      .map((templateEx) => {
+        const video = allVideos.find(v => v.id === templateEx.videoId);
+        if (!video) return null;
+        // Avoid adding duplicates
+        if (assignedExercises.some(assignedEx => assignedEx.videoId === video.id)) {
+            return null;
+        }
+        return {
+          ...templateEx,
+          video,
+          order: 0, // temporary order
+        };
+      })
+      .filter((ex): ex is AssignedExerciseWithVideo => ex !== null);
+
+    if (exercisesFromTemplate.length === 0 && template.exercises.length > 0) {
+        toast({
+            title: "Упражнения уже в плане",
+            description: "Все упражнения из этого шаблона уже есть в плане лечения."
+        });
+        return;
+    }
+
+    const newCombinedExercises = [...assignedExercises, ...exercisesFromTemplate]
+        .map((ex, index) => ({...ex, order: index + 1 }));
+
+    setAssignedExercises(newCombinedExercises);
+    toast({
+        title: 'Шаблон применен',
+        description: `Упражнения из шаблона "${template.name}" добавлены в план.`
+    })
+  };
+
 
   const handleGenerateSummary = async () => {
     setIsSummarizing(true);
@@ -254,11 +294,13 @@ export function PatientView({
           <TabsContent value="templates" className="flex-1">
              <ScrollArea className="h-full">
                 <div className="flex flex-col gap-2 p-4 pt-0">
-                  {mockTemplates.map(template => (
+                  {(!templates && !templatesError) && <p>Загрузка...</p>}
+                  {templatesError && <p className="text-destructive text-sm p-4">Не удалось загрузить шаблоны.</p>}
+                  {templates && templates.map(template => (
                     <Card key={template.id} className="p-3">
                       <p className="font-semibold">{template.name}</p>
                       <p className="text-sm text-muted-foreground mb-2">{template.description}</p>
-                      <Button size="sm" variant="outline" className="w-full">Применить шаблон</Button>
+                      <Button size="sm" variant="outline" className="w-full" onClick={() => applyTemplate(template)}>Применить шаблон</Button>
                     </Card>
                   ))}
                 </div>
