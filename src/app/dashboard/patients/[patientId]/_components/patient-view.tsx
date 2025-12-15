@@ -261,7 +261,13 @@ export function PatientView({
                 <Image src={ex.video.thumbnailUrl} alt={ex.video.title} width={80} height={45} className="rounded-md aspect-video object-cover" />
                 <div className="flex-1">
                   <p className="font-semibold text-sm">{ex.video.title}</p>
-                  <p className="text-xs text-muted-foreground">{`Подходы: ${ex.sets}, Повторения: ${ex.reps}`}</p>
+                  {(ex.sets || ex.reps) && (
+                    <p className="text-xs text-muted-foreground">
+                      {ex.sets && `Подходы: ${ex.sets}`}
+                      {ex.sets && ex.reps && ', '}
+                      {ex.reps && `Повторения: ${ex.reps}`}
+                    </p>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1">
                   <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => moveExercise(ex.order, 'up')} disabled={ex.order === 1}><ArrowUp className="h-4 w-4" /></Button>
