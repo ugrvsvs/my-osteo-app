@@ -48,7 +48,8 @@ export function PatientView({
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   
-  const { data: templates, error: templatesError } = useSWR<Template[]>('/api/templates', fetcher);
+  const { data, error: templatesError } = useSWR<{templates: Template[]}>('/api/templates', fetcher);
+  const templates = data?.templates;
 
 
   const addExercise = (video: Video) => {
