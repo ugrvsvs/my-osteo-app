@@ -8,7 +8,8 @@ import useSWR from 'swr';
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function PatientDetailPage({ params }: { params: { patientId: string } }) {
-  const { data: patient, error: patientError, isLoading: isPatientLoading } = useSWR<Patient>(`/api/patients/${params.patientId}`, fetcher);
+  const { patientId } = params;
+  const { data: patient, error: patientError, isLoading: isPatientLoading } = useSWR<Patient>(patientId ? `/api/patients/${patientId}` : null, fetcher);
   const { data: allVideos, error: videosError, isLoading: areVideosLoading } = useSWR<Video[]>('/api/videos', fetcher);
 
   if (isPatientLoading || areVideosLoading) {
