@@ -145,7 +145,6 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
                   <SelectValue placeholder="Выберите категорию" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Без категории</SelectItem>
                   {allCategories?.map(category => (
                     <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
                   ))}
