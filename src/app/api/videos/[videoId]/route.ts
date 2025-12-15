@@ -1,9 +1,10 @@
+
 import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 import { Video } from '@/lib/types';
 
-const jsonPath = path.join(process.cwd(), 'src', 'data', 'videos.json');
+const jsonPath = path.join(process.cwd(), 'src/data', 'videos.json');
 
 async function getVideos(): Promise<Video[]> {
   try {
@@ -46,4 +47,32 @@ export async function PUT(
     }
     return NextResponse.json({ message: 'An unknown error occurred' }, { status: 500 });
   }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { videoId: string } }
+) {
+    try {
+        const { videoId } = params;
+        let videos = await getVideos();
+
+        const videoExists = videos.some(v => v.id === videoId);
+        if (!videoExists) {
+            return NextResponse.json({ message: 'Video not found' }, { status: 404 });
+        }
+
+        const updatedVideos = videos.filter(v => v.id !== videoId);
+
+        await fs.writeFile(jsonPath, JSON.stringify(updatedVideos, null, 2));
+
+        return NextResponse.json({ message: 'Video deleted successfully' }, { status: 200 });
+
+    } catch (error) {
+        console.error('Failed to delete video:', error);
+        if (error instanceof Error) {
+            return NextResponse.json({ message: error.message }, { status: 500 });
+        }
+        return NextResponse.json({ message: 'An unknown error occurred' }, { status: 500 });
+    }
 }

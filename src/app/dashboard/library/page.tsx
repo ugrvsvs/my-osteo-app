@@ -2,19 +2,62 @@
 import type { Video, VideoCategory } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Clock, GripVertical } from 'lucide-react';
+import { Search, Clock, GripVertical, Pencil, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import useSWR from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddVideoDialog } from './_components/add-video-dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AddCategoryDialog } from './_components/add-category-dialog';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { EditVideoDialog } from './_components/edit-video-dialog';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-function VideoListItem({ video, allCategories, onVideoUpdated }: { video: Video; allCategories: VideoCategory[]; onVideoUpdated: () => void; }) {
+function VideoListItem({ video, allCategories, onVideoUpdated, onVideoDeleted }: { video: Video; allCategories: VideoCategory[]; onVideoUpdated: () => void; onVideoDeleted: (videoId: string) => void; }) {
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/videos/${video.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Не удалось удалить видео');
+      }
+      toast({
+        title: 'Видео удалено',
+        description: `Видео "${video.title}" было удалено.`,
+      });
+      onVideoDeleted(video.id);
+    } catch (error) {
+      console.error('Failed to delete video:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Ошибка',
+        description: error instanceof Error ? error.message : 'Произошла ошибка при удалении.',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="flex items-center gap-4 p-2 rounded-md hover:bg-muted/50 group">
       <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
@@ -34,9 +77,35 @@ function VideoListItem({ video, allCategories, onVideoUpdated }: { video: Video;
         <Clock className="h-4 w-4" />
         <span>{video.duration}</span>
       </div>
-      <EditVideoDialog video={video} allCategories={allCategories} onVideoUpdated={onVideoUpdated}>
-        <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">Редактировать</Button>
-      </EditVideoDialog>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <EditVideoDialog video={video} allCategories={allCategories} onVideoUpdated={onVideoUpdated}>
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Pencil className="h-4 w-4" />
+          </Button>
+        </EditVideoDialog>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Это действие невозможно отменить. Видео "{video.title}" будет навсегда удалено из библиотеки.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Отмена</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                {isDeleting ? 'Удаление...' : 'Удалить'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }
@@ -47,15 +116,21 @@ export default function LibraryPage() {
   
   const [searchTerm, setSearchTerm] = useState('');
 
-  const categories = categoriesData?.categories || [];
+  const categories = useMemo(() => categoriesData?.categories || [], [categoriesData]);
 
-  const handleMutateAll = () => {
+  const handleMutateAll = useCallback(() => {
     mutateVideos();
     mutateCategories();
-  };
+  }, [mutateVideos, mutateCategories]);
+
+  const handleVideoDeleted = useCallback((deletedVideoId: string) => {
+    // Optimistically update the UI by removing the deleted video
+    mutateVideos(currentVideos => (currentVideos || []).filter(v => v.id !== deletedVideoId), false);
+  }, [mutateVideos]);
 
   const filteredVideos = useMemo(() => {
     if (!videos) return [];
+    if (!searchTerm) return videos;
     return videos.filter(video => 
       video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (video.description && video.description.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -63,7 +138,7 @@ export default function LibraryPage() {
   }, [videos, searchTerm]);
   
   const videosByCategory = useMemo(() => {
-    return filteredVideos.reduce((acc, video) => {
+    return (filteredVideos || []).reduce((acc, video) => {
       const categoryId = video.categoryId || 'uncategorized';
       if (!acc[categoryId]) {
         acc[categoryId] = [];
@@ -73,7 +148,7 @@ export default function LibraryPage() {
     }, {} as Record<string, Video[]>);
   }, [filteredVideos]);
 
-  const uncategorizedVideos = videosByCategory['uncategorized'] || [];
+  const uncategorizedVideos = useMemo(() => videosByCategory['uncategorized'] || [], [videosByCategory]);
   
   const isLoading = videosLoading || categoriesLoading;
   const error = videosError || categoriesError;
@@ -113,40 +188,46 @@ export default function LibraryPage() {
       )}
       {error && <p className="text-destructive">Не удалось загрузить данные библиотеки.</p>}
 
-      {!isLoading && (
+      {!isLoading && !error && (
         <Accordion type="multiple" defaultValue={categories.map(c => c.id).concat(['uncategorized'])} className="w-full space-y-4">
-           {categories.map(category => (
-             <AccordionItem value={category.id} key={category.id} className="border rounded-md bg-card overflow-hidden">
-               <AccordionTrigger className="px-4 py-3 text-lg font-semibold hover:no-underline">
-                 {category.name}
-               </AccordionTrigger>
-               <AccordionContent className="p-2 pt-0">
-                  <div className="flex flex-col gap-1">
-                    {(videosByCategory[category.id] || []).map(video => (
-                      <VideoListItem key={video.id} video={video} allCategories={categories} onVideoUpdated={handleMutateAll} />
-                    ))}
-                     {(!videosByCategory[category.id] || videosByCategory[category.id].length === 0) && (
-                       <p className="p-4 text-center text-sm text-muted-foreground">В этой категории пока нет видео.</p>
-                     )}
-                  </div>
-               </AccordionContent>
-             </AccordionItem>
-           ))}
-            <AccordionItem value="uncategorized" className="border rounded-md bg-card overflow-hidden">
-               <AccordionTrigger className="px-4 py-3 text-lg font-semibold hover:no-underline">
-                 Без категории
-               </AccordionTrigger>
-               <AccordionContent className="p-2 pt-0">
-                  <div className="flex flex-col gap-1">
-                    {uncategorizedVideos.map(video => (
-                      <VideoListItem key={video.id} video={video} allCategories={categories} onVideoUpdated={handleMutateAll} />
-                    ))}
-                    {uncategorizedVideos.length === 0 && (
-                       <p className="p-4 text-center text-sm text-muted-foreground">Нет видео без категории.</p>
-                     )}
-                  </div>
-               </AccordionContent>
-             </AccordionItem>
+           {categories.map(category => {
+             const categoryVideos = videosByCategory[category.id] || [];
+             if (categoryVideos.length === 0 && uncategorizedVideos.length === 0 && searchTerm) return null; // Hide empty categories during search
+             return (
+              <AccordionItem value={category.id} key={category.id} className="border rounded-md bg-card overflow-hidden">
+                <AccordionTrigger className="px-4 py-3 text-lg font-semibold hover:no-underline">
+                  {category.name}
+                </AccordionTrigger>
+                <AccordionContent className="p-2 pt-0">
+                    <div className="flex flex-col gap-1">
+                      {categoryVideos.map(video => (
+                        <VideoListItem key={video.id} video={video} allCategories={categories} onVideoUpdated={handleMutateAll} onVideoDeleted={handleVideoDeleted}/>
+                      ))}
+                      {categoryVideos.length === 0 && (
+                        <p className="p-4 text-center text-sm text-muted-foreground">В этой категории пока нет видео.</p>
+                      )}
+                    </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
+           )}
+            {(uncategorizedVideos.length > 0 || searchTerm === '') && (
+              <AccordionItem value="uncategorized" className="border rounded-md bg-card overflow-hidden">
+                <AccordionTrigger className="px-4 py-3 text-lg font-semibold hover:no-underline">
+                  Без категории
+                </AccordionTrigger>
+                <AccordionContent className="p-2 pt-0">
+                    <div className="flex flex-col gap-1">
+                      {uncategorizedVideos.map(video => (
+                        <VideoListItem key={video.id} video={video} allCategories={categories} onVideoUpdated={handleMutateAll} onVideoDeleted={handleVideoDeleted}/>
+                      ))}
+                      {uncategorizedVideos.length === 0 && (
+                        <p className="p-4 text-center text-sm text-muted-foreground">Нет видео без категории.</p>
+                      )}
+                    </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
         </Accordion>
       )}
     </div>
