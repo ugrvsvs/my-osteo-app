@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useState, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { suggestExercises, type SuggestExercisesOutput } from '@/ai/flows/suggest-exercises-from-prompt';
 import type { Video } from '@/lib/types';
 
@@ -23,7 +23,7 @@ function SubmitButton() {
 }
 
 export function SmartGenerator({ onAddExercise }: { onAddExercise: (video: Video) => void; }) {
-  const [state, formAction] = useFormState(async (prevState: any, formData: FormData) => {
+  const [state, formAction] = useActionState(async (prevState: any, formData: FormData) => {
     try {
       const prompt = formData.get('prompt') as string;
       if (!prompt) return { error: 'Запрос не может быть пустым.' };
