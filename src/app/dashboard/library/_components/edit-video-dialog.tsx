@@ -25,6 +25,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { Video, VideoCategory } from '@/lib/types';
 import { getThumbnailFromUrl } from '@/lib/video-utils';
+import { Upload } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface EditVideoDialogProps {
   video: Video;
@@ -37,21 +39,30 @@ export function EditVideoDialog({ video, onVideoUpdated, allCategories, children
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const [isRutubeUrl, setIsRutubeUrl] = useState(false);
   
   const [formState, setFormState] = useState(video);
 
   useEffect(() => {
-    // Update state if the video prop changes
     setFormState(video);
+    setIsRutubeUrl(video.url.includes('rutube.ru'));
   }, [video]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormState(prev => ({ ...prev, [name]: value }));
+    if (name === 'url') {
+      setIsRutubeUrl(value.includes('rutube.ru'));
+    }
   };
 
   const handleUrlBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const url = e.target.value;
+    if (url.includes('rutube.ru')) {
+      setIsRutubeUrl(true);
+      return;
+    }
+     setIsRutubeUrl(false);
     if (url) {
       const thumbnailUrl = await getThumbnailFromUrl(url);
       if (thumbnailUrl) {
@@ -103,6 +114,7 @@ export function EditVideoDialog({ video, onVideoUpdated, allCategories, children
   useEffect(() => {
     if (open) {
       setFormState(video);
+      setIsRutubeUrl(video.url.includes('rutube.ru'));
     }
   }, [open, video]);
 
@@ -142,8 +154,22 @@ export function EditVideoDialog({ video, onVideoUpdated, allCategories, children
               <Label htmlFor="thumbnailUrl" className="text-right">
                 URL Превью
               </Label>
-              <Input id="thumbnailUrl" name="thumbnailUrl" value={formState.thumbnailUrl} onChange={handleInputChange} className="col-span-3" placeholder="Заполнится автоматически" />
+               <div className="col-span-3 flex items-center gap-2">
+                <Input id="thumbnailUrl" name="thumbnailUrl" value={formState.thumbnailUrl} onChange={handleInputChange} className="flex-1" placeholder="Заполнится для YouTube" />
+                <Button type="button" size="icon" variant="outline"><Upload /></Button>
+              </div>
             </div>
+             {isRutubeUrl && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                  <div className="col-start-2 col-span-3">
+                    <Alert variant="default" className="mt-2">
+                      <AlertDescription>
+                        Для Rutube необходимо указать URL превью вручную или загрузить изображение.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+              </div>
+            )}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="duration" className="text-right">
                 Длительность

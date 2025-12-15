@@ -22,15 +22,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Video, VideoCategory } from '@/lib/types';
 import { getThumbnailFromUrl } from '@/lib/video-utils';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: () => void, allCategories: VideoCategory[] }) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const [isRutubeUrl, setIsRutubeUrl] = useState(false);
   
   const initialFormState: Omit<Video, 'id'> = {
     title: '',
@@ -48,10 +50,19 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormState(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'url') {
+      setIsRutubeUrl(value.includes('rutube.ru'));
+    }
   };
 
   const handleUrlBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const url = e.target.value;
+    if (url.includes('rutube.ru')) {
+      setIsRutubeUrl(true);
+      return;
+    }
+    setIsRutubeUrl(false);
     if (url && !formState.thumbnailUrl) { // Only fetch if thumbnail is not already set
       const thumbnailUrl = await getThumbnailFromUrl(url);
       if (thumbnailUrl) {
@@ -89,6 +100,7 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
       onVideoAdded();
       setOpen(false);
       setFormState(initialFormState);
+      setIsRutubeUrl(false);
     } catch (error) {
       console.error(error);
       toast({
@@ -106,6 +118,7 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
       setOpen(isOpen);
       if (!isOpen) {
         setFormState(initialFormState);
+        setIsRutubeUrl(false);
       }
     }}>
       <DialogTrigger asChild>
@@ -145,8 +158,22 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
               <Label htmlFor="thumbnailUrl" className="text-right">
                 URL Превью
               </Label>
-              <Input id="thumbnailUrl" name="thumbnailUrl" value={formState.thumbnailUrl} onChange={handleInputChange} className="col-span-3" placeholder="Заполнится автоматически" />
+              <div className="col-span-3 flex items-center gap-2">
+                <Input id="thumbnailUrl" name="thumbnailUrl" value={formState.thumbnailUrl} onChange={handleInputChange} className="flex-1" placeholder="Заполнится для YouTube" />
+                <Button type="button" size="icon" variant="outline"><Upload /></Button>
+              </div>
             </div>
+            {isRutubeUrl && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                  <div className="col-start-2 col-span-3">
+                    <Alert variant="default" className="mt-2">
+                      <AlertDescription>
+                        Для Rutube необходимо указать URL превью вручную или загрузить изображение.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+              </div>
+            )}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="duration" className="text-right">
                 Длительность
