@@ -21,7 +21,6 @@ import {
 import { summarizePatientActivity } from '@/ai/flows/summarize-patient-activity';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import useSWR from 'swr';
 
 type AssignedExerciseWithVideo = AssignedExercise & { video: Video };
 
@@ -30,27 +29,22 @@ function getInitials(name: string) {
   return names.length > 1 ? `${names[0][0]}${names[1][0]}` : name.substring(0, 2);
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
-
 export function PatientView({
   patient,
   initialAssignedExercises,
   allVideos,
+  allTemplates,
 }: {
   patient: Patient;
   initialAssignedExercises: AssignedExerciseWithVideo[];
   allVideos: Video[];
+  allTemplates: Template[];
 }) {
   const [assignedExercises, setAssignedExercises] = useState(initialAssignedExercises);
   const [summary, setSummary] = useState('');
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  
-  const { data, error: templatesError } = useSWR<{templates: Template[]}>('/api/templates', fetcher);
-  const templates = data?.templates;
-
 
   const addExercise = (video: Video) => {
     // Check if the exercise is already in the plan
@@ -295,9 +289,9 @@ export function PatientView({
           <TabsContent value="templates" className="flex-1">
              <ScrollArea className="h-full">
                 <div className="flex flex-col gap-2 p-4 pt-0">
-                  {(!templates && !templatesError) && <p>Загрузка...</p>}
-                  {templatesError && <p className="text-destructive text-sm p-4">Не удалось загрузить шаблоны.</p>}
-                  {templates && templates.map(template => (
+                  {!allTemplates && <p>Загрузка...</p>}
+                  {allTemplates && allTemplates.length === 0 && <p className="text-muted-foreground text-sm p-4">Шаблоны не найдены.</p>}
+                  {allTemplates && allTemplates.map(template => (
                     <Card key={template.id} className="p-3">
                       <p className="font-semibold">{template.name}</p>
                       <p className="text-sm text-muted-foreground mb-2">{template.description}</p>

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { PatientView } from './_components/patient-view';
-import type { Patient, Video } from '@/lib/types';
+import type { Patient, Video, Template } from '@/lib/types';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import path from 'path';
 import fs from 'fs/promises';
@@ -16,7 +16,6 @@ async function readData<T>(filePath: string): Promise<T[]> {
     throw new Error(`Error reading data file: ${filePath}`);
   }
 }
-
 
 async function getPatient(patientId: string): Promise<Patient | null> {
   try {
@@ -41,12 +40,24 @@ async function getVideos(): Promise<Video[]> {
   }
 }
 
+async function getTemplates(): Promise<Template[]> {
+  try {
+    const jsonPath = path.join(process.cwd(), 'src', 'data', 'templates.json');
+    const templates = await readData<Template>(jsonPath);
+    return templates;
+  } catch (error) {
+    console.error("Failed to fetch templates:", error);
+    return [];
+  }
+}
+
 
 export default async function PatientDetailPage({ params }: { params: { patientId: string } }) {
   const { patientId } = params;
-  const [patient, allVideos] = await Promise.all([
+  const [patient, allVideos, allTemplates] = await Promise.all([
     getPatient(patientId),
-    getVideos()
+    getVideos(),
+    getTemplates()
   ]);
 
   if (!patient) {
@@ -75,7 +86,12 @@ export default async function PatientDetailPage({ params }: { params: { patientI
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PatientView patient={patient} initialAssignedExercises={assignedVideosWithDetails} allVideos={allVideos || []} />
+      <PatientView 
+        patient={patient} 
+        initialAssignedExercises={assignedVideosWithDetails} 
+        allVideos={allVideos || []}
+        allTemplates={allTemplates || []}
+      />
     </div>
   );
 }
