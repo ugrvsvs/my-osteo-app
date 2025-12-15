@@ -24,19 +24,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isUserLoading, router]);
+  // useEffect(() => {
+  //   if (!isUserLoading && !user) {
+  //     router.push('/login');
+  //   }
+  // }, [user, isUserLoading, router]);
   
-  if (isUserLoading || !user) {
-    return (
-        <div className="flex min-h-screen items-center justify-center">
-            <p>Загрузка...</p>
-        </div>
-    );
-  }
+  // if (isUserLoading || !user) {
+  //   return (
+  //       <div className="flex min-h-screen items-center justify-center">
+  //           <p>Загрузка...</p>
+  //       </div>
+  //   );
+  // }
 
   return (
     <SidebarProvider>
@@ -81,5 +81,3 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
-
-    
