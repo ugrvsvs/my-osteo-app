@@ -1,3 +1,70 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "patient-1",
+      "description": "Аватар пациента Анны Ковалевой",
+      "imageUrl": "https://images.unsplash.com/photo-1557053908-4793c484d06f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx3b21hbiUyMHBvcnRyYWl0fGVufDB8fHx8MTc2NTc3NTIwN3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman portrait"
+    },
+    {
+      "id": "patient-2",
+      "description": "Аватар пациента Ивана Петрова",
+      "imageUrl": "https://images.unsplash.com/photo-1607031542107-f6f46b5d54e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtYW4lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjU3Mzc3NDR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man portrait"
+    },
+    {
+      "id": "patient-3",
+      "description": "Аватар пациента Ольги Сидоровой",
+      "imageUrl": "https://images.unsplash.com/photo-1592621385612-4d7129426394?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx3b21hbiUyMHNtaWxpbmd8ZW58MHx8fHwxNzY1NzAzNDU5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman smiling"
+    },
+    {
+      "id": "patient-4",
+      "description": "Аватар пациента Дмитрия Васильева",
+      "imageUrl": "https://images.unsplash.com/photo-1562124638-724e13052daf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxtYW4lMjBzbWlsaW5nfGVufDB8fHx8MTc2NTc2NDE0MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man smiling"
+    },
+    {
+      "id": "video-1",
+      "description": "Превью видео 'Наклоны таза'",
+      "imageUrl": "https://images.unsplash.com/photo-1701824429213-97fa38e76467?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx5b2dhJTIwc3RyZXRjaGluZ3xlbnwwfHx8fDE3NjU3MzY5NzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "yoga stretching"
+    },
+    {
+      "id": "video-2",
+      "description": "Превью видео 'Мостик'",
+      "imageUrl": "https://images.unsplash.com/photo-1604062505943-bcf2944b70e8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwaWxhdGVzJTIwYnJpZGdlfGVufDB8fHx8MTc2NTgxNTk2NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pilates bridge"
+    },
+    {
+      "id": "video-3",
+      "description": "Превью видео 'Кошка-Корова'",
+      "imageUrl": "https://images.unsplash.com/photo-1583873743670-6d60e445a7e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHx5b2dhJTIwcG9zZXxlbnwwfHx8fDE3NjU3ODU2MjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "yoga pose"
+    },
+    {
+      "id": "video-4",
+      "description": "Превью видео 'Сгибание колена к груди'",
+      "imageUrl": "https://images.unsplash.com/photo-1611800065476-b295f882c8ea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzdHJldGNoaW5nJTIwbGVnfGVufDB8fHx8MTc2NTgxNTk2NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "stretching leg"
+    },
+    {
+      "id": "video-5",
+      "description": "Превью видео 'Подъемы на носки'",
+      "imageUrl": "https://images.unsplash.com/photo-1621739154367-665aac86e9df?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Y2FsZiUyMHJhaXNlc3xlbnwwfHx8fDE3NjU4MTU5NjR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "calf raises"
+    },
+    {
+      "id": "video-6",
+      "description": "Превью видео 'Махи руками'",
+      "imageUrl": "https://images.unsplash.com/photo-1644496291990-5ee0e58c9e2e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxhcm0lMjBjaXJjbGVzfGVufDB8fHx8MTc2NTgxNTk2NXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "arm circles"
+    },
+    {
+      "id": "user-avatar",
+      "description": "Аватар пользователя",
+      "imageUrl": "https://images.unsplash.com/photo-1758691461990-03b49d969495?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxkb2N0b3IlMjBwcm9mZXNzaW9uYWx8ZW58MHx8fHwxNzY1NzI0NTA3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "doctor professional"
+    }
+  ]
 }
