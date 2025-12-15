@@ -17,10 +17,12 @@ import {
   Plus,
   Save,
   Trash2,
+  VideoIcon,
 } from 'lucide-react';
-import { summarizePatientActivity } from '@/ai/flows/summarize-patient-activity';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { formatDistanceToNow } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 type AssignedExerciseWithVideo = AssignedExercise & { video: Video };
 
@@ -41,8 +43,6 @@ export function PatientView({
   allTemplates: Template[];
 }) {
   const [assignedExercises, setAssignedExercises] = useState(initialAssignedExercises);
-  const [summary, setSummary] = useState('');
-  const [isSummarizing, setIsSummarizing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
@@ -124,34 +124,6 @@ export function PatientView({
     })
   };
 
-
-  const handleGenerateSummary = async () => {
-    setIsSummarizing(true);
-    setSummary('');
-    try {
-      const videoTitles = patient.activityLog
-        .map(log => allVideos.find(v => v.id === log.videoId)?.title)
-        .filter((t): t is string => !!t);
-
-      if (videoTitles.length === 0) {
-        setSummary('У пациента нет зарегистрированной активности.');
-        return;
-      }
-      
-      const result = await summarizePatientActivity({ patientName: patient.name, videoTitles });
-      setSummary(result.summary);
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Ошибка',
-        description: 'Не удалось сгенерировать сводку.',
-      });
-    } finally {
-      setIsSummarizing(false);
-    }
-  };
-
   const handleSavePlan = async () => {
     setIsSaving(true);
     try {
@@ -209,15 +181,33 @@ export function PatientView({
         <Card className="flex-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Activity /> Сводка Активности
+              <Activity /> Журнал Активности
             </CardTitle>
-            <CardDescription>Сводка на основе открытых видео.</CardDescription>
+            <CardDescription>Последние действия пациента.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <Button onClick={handleGenerateSummary} disabled={isSummarizing}>
-              {isSummarizing ? 'Генерация...' : 'Сгенерировать сводку'}
-            </Button>
-            {summary && <p className="text-sm text-muted-foreground p-4 bg-muted rounded-md">{summary}</p>}
+            <ScrollArea className="h-48">
+              <div className="flex flex-col gap-3 pr-3">
+                {patient.activityLog && patient.activityLog.length > 0 ? (
+                  [...patient.activityLog].reverse().map(log => {
+                    const video = allVideos.find(v => v.id === log.videoId);
+                    return (
+                      <div key={log.id} className="flex items-center gap-2 text-sm">
+                        <VideoIcon className="h-4 w-4 text-muted-foreground" />
+                        <div className="flex-1">
+                          <p className="font-medium truncate">Открыл: {video?.title || 'Неизвестное видео'}</p>
+                           <p className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true, locale: ru })}
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })
+                ) : (
+                  <p className="text-sm text-muted-foreground">Нет зарегистрированной активности.</p>
+                )}
+              </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       </div>

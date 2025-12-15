@@ -5,7 +5,7 @@
     "email": "anna.kovaleva@example.com",
     "avatarUrl": "https://images.unsplash.com/photo-1557053908-4793c484d06f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx3b21hbiUyMHBvcnRyYWl0fGVufDB8fHx8MTc2NTc3NTIwN3ww&ixlib=rb-4.1.0&q=80&w=1080",
     "shareId": "share-anna-123",
-    "lastActivity": "2024-07-20T10:00:00Z",
+    "lastActivity": "2025-12-15T17:49:37.796Z",
     "assignedExercises": [
       {
         "videoId": "vid1",
@@ -32,6 +32,30 @@
         "videoId": "vid1",
         "timestamp": "2024-07-20T10:10:00Z",
         "action": "completed"
+      },
+      {
+        "id": "log1765820927038",
+        "videoId": "vid1",
+        "timestamp": "2025-12-15T17:48:47.038Z",
+        "action": "opened"
+      },
+      {
+        "id": "log1765820966653",
+        "videoId": "vid1",
+        "timestamp": "2025-12-15T17:49:26.653Z",
+        "action": "opened"
+      },
+      {
+        "id": "log1765820967184",
+        "videoId": "vid1",
+        "timestamp": "2025-12-15T17:49:27.184Z",
+        "action": "opened"
+      },
+      {
+        "id": "log1765820977796",
+        "videoId": "vid2",
+        "timestamp": "2025-12-15T17:49:37.796Z",
+        "action": "opened"
       }
     ]
   },
