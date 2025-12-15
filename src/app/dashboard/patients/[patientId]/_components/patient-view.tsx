@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Patient, Video, AssignedExercise, Template } from '@/lib/types';
+import type { Patient, Video, AssignedExercise, Template, ActivityLog } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -31,6 +31,33 @@ function getInitials(name: string) {
   return names.length > 1 ? `${names[0][0]}${names[1][0]}` : name.substring(0, 2);
 }
 
+function getActivitySummary(activityLog: ActivityLog[], allVideos: Video[]) {
+    if (!activityLog || activityLog.length === 0) {
+        return [];
+    }
+
+    const summary = new Map<string, { count: number; video: Video | undefined }>();
+
+    for (const log of activityLog) {
+        if (log.action === 'opened') {
+            const current = summary.get(log.videoId);
+            if (current) {
+                summary.set(log.videoId, { ...current, count: current.count + 1 });
+            } else {
+                const video = allVideos.find(v => v.id === log.videoId);
+                summary.set(log.videoId, { count: 1, video });
+            }
+        }
+    }
+
+    return Array.from(summary.entries()).map(([videoId, data]) => ({
+        videoId,
+        count: data.count,
+        video: data.video,
+    }));
+}
+
+
 export function PatientView({
   patient,
   initialAssignedExercises,
@@ -45,6 +72,8 @@ export function PatientView({
   const [assignedExercises, setAssignedExercises] = useState(initialAssignedExercises);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+
+  const activitySummary = getActivitySummary(patient.activityLog, allVideos);
 
   const addExercise = (video: Video) => {
     // Check if the exercise is already in the plan
@@ -181,30 +210,27 @@ export function PatientView({
         <Card className="flex-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Activity /> Журнал Активности
+              <Activity /> Сводка Активности
             </CardTitle>
-            <CardDescription>Последние действия пациента.</CardDescription>
+            <CardDescription>Общая статистика по выполненным упражнениям.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <ScrollArea className="h-48">
               <div className="flex flex-col gap-3 pr-3">
-                {patient.activityLog && patient.activityLog.length > 0 ? (
-                  [...patient.activityLog].reverse().map(log => {
-                    const video = allVideos.find(v => v.id === log.videoId);
-                    return (
-                      <div key={log.id} className="flex items-center gap-2 text-sm">
-                        <VideoIcon className="h-4 w-4 text-muted-foreground" />
+                {activitySummary.length > 0 ? (
+                  activitySummary.map(item => (
+                      item.video && (
+                      <div key={item.videoId} className="flex items-center gap-3 text-sm">
+                        <Image src={item.video.thumbnailUrl} alt={item.video.title} width={60} height={34} className="rounded aspect-video object-cover"/>
                         <div className="flex-1">
-                          <p className="font-medium truncate">Открыл: {video?.title || 'Неизвестное видео'}</p>
-                           <p className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true, locale: ru })}
-                          </p>
+                          <p className="font-medium truncate">{item.video.title}</p>
                         </div>
+                        <div className="font-semibold text-base">{item.count}</div>
                       </div>
-                    )
-                  })
+                      )
+                  ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">Нет зарегистрированной активности.</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">Нет зарегистрированной активности.</p>
                 )}
               </div>
             </ScrollArea>
@@ -280,7 +306,7 @@ export function PatientView({
              <ScrollArea className="h-full">
                 <div className="flex flex-col gap-2 p-4 pt-0">
                   {allTemplates.length === 0 ? (
-                     <p className="text-muted-foreground text-sm p-4">Шаблоны не найдены.</p>
+                     <p className="text-muted-foreground text-sm p-4 text-center">Шаблоны не найдены.</p>
                   ) : allTemplates.map(template => (
                     <Card key={template.id} className="p-3">
                       <p className="font-semibold">{template.name}</p>
