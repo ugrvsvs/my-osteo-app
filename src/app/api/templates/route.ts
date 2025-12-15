@@ -31,7 +31,7 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const newTemplateData = await request.json();
-        const templates = await getTemplates();
+        let templates = await getTemplates();
 
         if (!newTemplateData.name || !newTemplateData.exercises || newTemplateData.exercises.length === 0) {
             return NextResponse.json({ message: 'Name and at least one exercise are required' }, { status: 400 });

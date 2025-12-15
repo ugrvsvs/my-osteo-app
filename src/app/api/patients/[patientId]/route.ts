@@ -48,7 +48,7 @@ export async function PUT(
     const { patientId } = params;
     const updatedData = await request.json();
 
-    const patients = await getPatients();
+    let patients = await getPatients();
     
     const patientIndex = patients.findIndex(p => p.id === patientId);
 
