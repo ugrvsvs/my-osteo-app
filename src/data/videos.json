@@ -1,16 +1,5 @@
 [
   {
-    "id": "vid1",
-    "title": "Наклоны таза",
-    "description": "Упражнение для укрепления мышц кора и снятия напряжения в пояснице.",
-    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    "thumbnailUrl": "https://images.unsplash.com/photo-1701824429213-97fa38e76467?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx5b2dhJTIwc3RyZXRjaGluZ3xlbnwwfHx8fDE3NjU3MzY5NzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
-    "duration": "3:45",
-    "zone": "spine",
-    "level": "beginner",
-    "categoryId": "cat1"
-  },
-  {
     "id": "vid2",
     "title": "Мостик",
     "description": "Укрепляет ягодичные мышцы и заднюю поверхность бедра, стабилизирует таз.",
@@ -65,13 +54,13 @@
     "categoryId": "cat2"
   },
   {
-    "id": "vid1765831401367",
-    "title": "Визуальный осмотр. Остеопатия и остеопатические процедуры.",
-    "description": "\nУход и лечение: медицинские процедуры",
-    "url": "https://rutube.ru/video/4fab120f928471095a11a0de8bfaf580/",
-    "thumbnailUrl": "https://picsum.photos/seed/1765831401367/1280/720",
-    "duration": "7",
-    "zone": "spine",
+    "id": "vid1765833749184",
+    "title": "Как работает остеопатия?",
+    "description": "СОКЛИНИКА - системная целостность Здоровья",
+    "url": "https://www.youtube.com/watch?v=icWrQM_J3k0",
+    "thumbnailUrl": "https://img.youtube.com/vi/icWrQM_J3k0/hqdefault.jpg",
+    "duration": "3:45",
+    "zone": "foot",
     "level": "beginner",
     "categoryId": "cat1"
   }
