@@ -137,6 +137,20 @@
         "reps": 12
       }
     ],
-    "activityLog": []
+    "activityLog": [
+      {
+        "id": "log1765831864066",
+        "videoId": "vid1765831401367",
+        "timestamp": "2025-12-15T20:51:04.067Z",
+        "action": "opened"
+      },
+      {
+        "id": "log1765831876878",
+        "videoId": "vid1765831401367",
+        "timestamp": "2025-12-15T20:51:16.878Z",
+        "action": "opened"
+      }
+    ],
+    "lastActivity": "2025-12-15T20:51:16.878Z"
   }
 ]

@@ -60,9 +60,9 @@ export function ExerciseCard({ patientId, exercise }: ExerciseCardProps) {
                 </div>
               )}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-                <div className="flex items-center gap-2"><Layers className="h-4 w-4 text-primary"/> <span>Подходы: {sets}</span></div>
-                <div className="flex items-center gap-2"><Repeat className="h-4 w-4 text-primary"/> <span>Повторения: {reps}</span></div>
-                <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary"/> <span>Длительность: {duration || video.duration}</span></div>
+                {(duration || video.duration) && (
+                    <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary"/> <span>Длительность: {duration || video.duration}</span></div>
+                )}
               </div>
             </CardContent>
             <CardFooter>
