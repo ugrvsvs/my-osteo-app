@@ -14,10 +14,17 @@ import {
 import { CreditCard, LogOut, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { mockDoctor } from '@/lib/data'; // Using mock data
+import { useEffect, useState } from 'react';
 
 export function UserNav() {
   const router = useRouter();
   const user = mockDoctor; // Using mock user data
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
 
   const handleSignOut = async () => {
     // In a real app, you would clear the session/token
@@ -33,6 +40,10 @@ export function UserNav() {
     }
     return name.substring(0, 2);
   };
+
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <DropdownMenu>
