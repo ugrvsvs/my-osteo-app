@@ -1,5 +1,5 @@
 'use client';
-import { collection, writeBatch, getDocs, Firestore } from 'firebase/firestore';
+import { collection, writeBatch, getDocs, Firestore, doc } from 'firebase/firestore';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const findImage = (id: string) => PlaceHolderImages.find((img) => img.id === id)?.imageUrl || '';
@@ -131,7 +131,7 @@ export const seedFirestore = async (db: Firestore) => {
   if (videosSnapshot.empty) {
     const batch = writeBatch(db);
     videosToSeed.forEach(video => {
-      const docRef = collection(db, 'videos').doc(video.id);
+      const docRef = doc(db, 'videos', video.id);
       batch.set(docRef, video);
     });
     await batch.commit();
@@ -144,7 +144,7 @@ export const seedFirestore = async (db: Firestore) => {
   if (patientsSnapshot.empty) {
     const batch = writeBatch(db);
     patientsToSeed.forEach(patient => {
-      const docRef = collection(db, 'patients').doc(patient.id);
+      const docRef = doc(db, 'patients', patient.id);
       batch.set(docRef, patient);
     });
     await batch.commit();
