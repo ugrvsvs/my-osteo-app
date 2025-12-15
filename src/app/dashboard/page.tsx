@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, Search, Clock } from 'lucide-react';
+import { Search, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import useSWR from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AddPatientDialog } from './_components/add-patient-dialog';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -54,7 +55,7 @@ function PatientCard({ patient }: { patient: Patient }) {
 }
 
 export default function DashboardPage() {
-  const { data: patients, error, isLoading } = useSWR<Patient[]>('/api/patients', fetcher);
+  const { data: patients, error, isLoading, mutate } = useSWR<Patient[]>('/api/patients', fetcher);
 
   return (
     <div className="flex flex-col gap-6">
@@ -65,10 +66,7 @@ export default function DashboardPage() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input type="search" placeholder="Поиск пациентов..." className="pl-8 sm:w-[300px]" />
           </div>
-          <Button>
-            <PlusCircle />
-            Добавить пациента
-          </Button>
+          <AddPatientDialog onPatientAdded={mutate} />
         </div>
       </div>
       
