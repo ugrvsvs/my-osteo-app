@@ -7,9 +7,8 @@ import { PlusCircle, Search, Clock } from 'lucide-react';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Icons } from '@/components/app/icons';
-import { useCollection, useFirestore, useUser } from '@/firebase';
-import { useMemo } from 'react';
-import { collection } from 'firebase/firestore';
+import useSWR from 'swr';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const zoneTranslations: Record<string, string> = {
   spine: 'Позвоночник',
@@ -25,6 +24,8 @@ const levelTranslations: Record<string, string> = {
     intermediate: 'Средний',
     advanced: 'Продвинутый'
 }
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 function VideoCard({ video }: { video: Video }) {
   const ZoneIcon = Icons[video.zone as keyof typeof Icons];
@@ -66,15 +67,7 @@ function VideoCard({ video }: { video: Video }) {
 }
 
 export default function LibraryPage() {
-  const firestore = useFirestore();
-
-  const videosQuery = useMemo(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'videos');
-  }, [firestore]);
-
-  const { data: videos, isLoading } = useCollection<Video>(videosQuery);
-
+  const { data: videos, error, isLoading } = useSWR<Video[]>('/api/videos', fetcher);
 
   return (
     <div className="flex flex-col gap-6">
@@ -92,14 +85,29 @@ export default function LibraryPage() {
         </div>
       </div>
       
-      {isLoading && <p>Загрузка видео...</p>}
+      {isLoading && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-0">
+                <Skeleton className="w-full h-40" />
+              </CardContent>
+              <CardFooter className="flex-col items-start p-4 gap-2">
+                 <Skeleton className="h-4 w-3/4" />
+                 <Skeleton className="h-4 w-1/2" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
+      {error && <p className="text-destructive">Не удалось загрузить видео.</p>}
 
       {!isLoading && videos && (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {videos.map((video) => (
-          <VideoCard key={video.id} video={video} />
-        ))}
-      </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {videos.map((video) => (
+            <VideoCard key={video.id} video={video} />
+          ))}
+        </div>
       )}
     </div>
   );

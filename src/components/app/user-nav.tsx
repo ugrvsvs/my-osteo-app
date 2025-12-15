@@ -11,21 +11,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth, useUser } from '@/firebase';
-import { signOut } from 'firebase/auth';
 import { CreditCard, LogOut, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { mockDoctor } from '@/lib/data'; // Using mock data
 
 export function UserNav() {
-  const { auth } = useAuth() ?? {};
-  const { user } = useUser();
   const router = useRouter();
+  const user = mockDoctor; // Using mock user data
 
   const handleSignOut = async () => {
-    if (auth) {
-        await signOut(auth);
-        router.push('/login');
-    }
+    // In a real app, you would clear the session/token
+    sessionStorage.removeItem('isLoggedIn');
+    router.push('/login');
   };
 
   const getInitials = (name?: string | null) => {
@@ -42,15 +39,16 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || 'Аватар пользователя'} />
-            <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+            {/* In a real app, you might have user.photoURL */}
+            {/* <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || 'Аватар пользователя'} /> */}
+            <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user?.displayName || 'Доктор'}</p>
+            <p className="text-sm font-medium leading-none">{user?.name || 'Доктор'}</p>
             <p className="text-xs leading-none text-muted-foreground">{user?.email || 'doctor@osteo.app'}</p>
           </div>
         </DropdownMenuLabel>
@@ -78,5 +76,3 @@ export function UserNav() {
     </DropdownMenu>
   );
 }
-
-    

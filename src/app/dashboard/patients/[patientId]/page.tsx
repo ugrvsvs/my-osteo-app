@@ -3,31 +3,25 @@ import { notFound } from 'next/navigation';
 import { PatientView } from './_components/patient-view';
 import type { Patient, Video } from '@/lib/types';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, collection } from 'firebase/firestore';
+import useSWR from 'swr';
+
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function PatientDetailPage({ params }: { params: { patientId: string } }) {
-  const firestore = useFirestore();
-
-  const patientRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return doc(firestore, 'patients', params.patientId);
-  }, [firestore, params.patientId]);
-
-  const allVideosRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'videos');
-  }, [firestore]);
-
-  const { data: patient, isLoading: isPatientLoading } = useDoc<Patient>(patientRef);
-  const { data: allVideos, isLoading: areVideosLoading } = useCollection<Video>(allVideosRef);
+  const { data: patient, error: patientError, isLoading: isPatientLoading } = useSWR<Patient>(`/api/patients/${params.patientId}`, fetcher);
+  const { data: allVideos, error: videosError, isLoading: areVideosLoading } = useSWR<Video[]>('/api/videos', fetcher);
 
   if (isPatientLoading || areVideosLoading) {
     return <p>Загрузка данных пациента...</p>;
   }
 
-  if (!patient) {
+  if (patientError || !patient) {
+    // This will trigger the not-found page if the API returns an error (e.g., 404)
     notFound();
+  }
+
+  if (videosError) {
+    return <p className='text-destructive'>Не удалось загрузить видео.</p>
   }
   
   const assignedVideosWithDetails = (patient.assignedExercises || [])

@@ -1,3 +1,5 @@
+// This page will need to be refactored to fetch data from the new API
+// For now, it will use mock data to avoid breaking.
 import { mockPatients, mockVideos } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,6 +10,7 @@ import { Clock, Layers, Repeat } from 'lucide-react';
 import { Logo } from '@/components/app/logo';
 
 export default function PatientSharePage({ params }: { params: { patientShareId: string } }) {
+  // TODO: Replace with API call
   const patient = mockPatients.find((p) => p.shareId === params.patientShareId);
 
   if (!patient) {
@@ -22,6 +25,7 @@ export default function PatientSharePage({ params }: { params: { patientShareId:
     return names[0].substring(0, 2);
   };
 
+  // TODO: Replace with API call or pass data from parent
   const assignedVideos = patient.assignedExercises
     .map(ex => ({ ...ex, video: mockVideos.find(v => v.id === ex.videoId) }))
     .filter(ex => ex.video)

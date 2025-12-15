@@ -1,5 +1,4 @@
 'use client';
-
 import type { Patient } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,9 +8,10 @@ import { PlusCircle, Search, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { useCollection, useFirestore, useUser } from '@/firebase';
-import { collection } from 'firebase/firestore';
-import { useMemo } from 'react';
+import useSWR from 'swr';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 function PatientCard({ patient }: { patient: Patient }) {
   const getInitials = (name: string) => {
@@ -54,15 +54,7 @@ function PatientCard({ patient }: { patient: Patient }) {
 }
 
 export default function DashboardPage() {
-  const firestore = useFirestore();
-  const { user } = useUser();
-
-  const patientsQuery = useMemo(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, 'patients');
-  }, [firestore, user]);
-
-  const { data: patients, isLoading } = useCollection<Patient>(patientsQuery);
+  const { data: patients, error, isLoading } = useSWR<Patient[]>('/api/patients', fetcher);
 
   return (
     <div className="flex flex-col gap-6">
@@ -80,7 +72,25 @@ export default function DashboardPage() {
         </div>
       </div>
       
-      {isLoading && <p>Загрузка пациентов...</p>}
+      {isLoading && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-2">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <div className="grid gap-1 flex-1">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                 <Skeleton className="h-4 w-1/3" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+      {error && <p className="text-destructive">Не удалось загрузить пациентов.</p>}
 
       {!isLoading && patients && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

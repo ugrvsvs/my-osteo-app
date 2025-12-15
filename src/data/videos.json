@@ -1,0 +1,63 @@
+
+[
+    {
+    "id": "vid1",
+    "title": "Наклоны таза",
+    "description": "Упражнение для укрепления мышц кора и снятия напряжения в пояснице.",
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1701824429213-97fa38e76467?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx5b2dhJTIwc3RyZXRjaGluZ3xlbnwwfHx8fDE3NjU3MzY5NzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    "duration": "3:45",
+    "zone": "spine",
+    "level": "beginner"
+  },
+  {
+    "id": "vid2",
+    "title": "Мостик",
+    "description": "Укрепляет ягодичные мышцы и заднюю поверхность бедра, стабилизирует таз.",
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1604062505943-bcf2944b70e8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwaWxhdGVzJTIwYnJpZGdlfGVufDB8fHx8MTc2NTgxNTk2NHww&ixlib=rb-4.1.0&q=80&w=1080",
+    "duration": "5:10",
+    "zone": "spine",
+    "level": "beginner"
+  },
+  {
+    "id": "vid3",
+    "title": "Кошка-Корова",
+    "description": "Улучшает гибкость позвоночника и снимает напряжение в спине.",
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1583873743670-6d60e445a7e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHx5b2dhJTIwcG9zZXxlbnwwfHx8fDE3NjU3ODU2MjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    "duration": "4:20",
+    "zone": "spine",
+    "level": "intermediate"
+  },
+  {
+    "id": "vid4",
+    "title": "Сгибание колена к груди",
+    "description": "Растягивает мышцы нижней части спины и ягодиц.",
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1611800065476-b295f882c8ea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzdHJldGNoaW5nJTIwbGVnfGVufDB8fHx8MTc2NTgxNTk2NHww&ixlib=rb-4.1.0&q=80&w=1080",
+    "duration": "6:00",
+    "zone": "knee",
+    "level": "beginner"
+  },
+  {
+    "id": "vid5",
+    "title": "Подъемы на носки",
+    "description": "Укрепляет икроножные мышцы и улучшает стабильность голеностопа.",
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1621739154367-665aac86e9df?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Y2FsZiUyMHJhaXNlc3xlbnwwfHx8fDE3NjU4MTU5NjR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+    "duration": "2:30",
+    "zone": "foot",
+    "level": "beginner"
+  },
+  {
+    "id": "vid6",
+    "title": "Махи руками",
+    "description": "Развивает подвижность плечевых суставов и снимает напряжение в шее.",
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "thumbnailUrl": "https://images.unsplash.com/photo-1644496291990-5ee0e58c9e2e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxhcm0lMjBjaXJjbGVzfGVufDB8fHx8MTc2NTgxNTk2NXww&ixlib=rb-4.1.0&q=80&w=1080",
+    "duration": "3:00",
+    "zone": "shoulder",
+    "level": "intermediate"
+  }
+]

@@ -1,8 +1,6 @@
 'use client';
 import type { ReactNode } from 'react';
-import { useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -10,34 +8,15 @@ import {
   SidebarContent,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
   SidebarTrigger,
+  SidebarInset,
 } from '@/components/ui/sidebar';
 import { Users, Library, FileStack, LayoutDashboard } from 'lucide-react';
 import { Logo } from '@/components/app/logo';
 import { UserNav } from '@/components/app/user-nav';
 import { Button } from '@/components/ui/button';
-import { useUser } from '@/firebase';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { user, isUserLoading } = useUser();
-  const router = useRouter();
-
-  // useEffect(() => {
-  //   if (!isUserLoading && !user) {
-  //     router.push('/login');
-  //   }
-  // }, [user, isUserLoading, router]);
-  
-  // if (isUserLoading || !user) {
-  //   return (
-  //       <div className="flex min-h-screen items-center justify-center">
-  //           <p>Загрузка...</p>
-  //       </div>
-  //   );
-  // }
-
   return (
     <SidebarProvider>
       <Sidebar>

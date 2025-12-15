@@ -5,55 +5,47 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth, useUser } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function LoginPage() {
-  const { auth } = useAuth() ?? {};
-  const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [email, setEmail] = useState('doctor@osteo.app');
   const [password, setPassword] = useState('password123');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
+  // In a real app, you would have a context or state management for user session
+  // For this demo, we'll just redirect to dashboard
   useEffect(() => {
-    if (!isUserLoading && user) {
-      router.push('/dashboard');
-    }
-  }, [user, isUserLoading, router]);
-  
-  // Auto-login for testing
-  useEffect(() => {
-      if (!isUserLoading && !user && auth) {
-          handleSignIn();
-      }
-  }, [isUserLoading, user, auth]);
+    // Uncomment this to re-enable login flow
+    // const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+    // if (isLoggedIn) {
+    //   router.push('/dashboard');
+    // }
+  }, [router]);
 
   const handleSignIn = async () => {
-    if (!auth) return;
+    setLoading(true);
     setError('');
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push('/dashboard');
-    } catch (error: any) {
-      console.error('Error signing in:', error);
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential' || error.code === 'auth/configuration-not-found') {
-          setError('Неверный email или пароль, или конфигурация не найдена.');
-      } else {
-          setError('Произошла ошибка при входе.');
-      }
+    // Mock API call
+    await new Promise(resolve => setTimeout(resolve, 500));
+    if (email === 'doctor@osteo.app' && password === 'password123') {
+        // In a real app, you'd get a token and store it.
+        // For now, just mark as logged in.
+        sessionStorage.setItem('isLoggedIn', 'true');
+        router.push('/dashboard');
+    } else {
+        setError('Неверный email или пароль.');
     }
+    setLoading(false);
   };
+  
+  // Skip login for dev
+  useEffect(() => {
+    router.push('/dashboard');
+  }, [router]);
 
-  if (isUserLoading || user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p>Загрузка...</p>
-      </div>
-    );
-  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
@@ -76,8 +68,8 @@ export default function LoginPage() {
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button onClick={handleSignIn} className="w-full">
-                Войти
+            <Button onClick={handleSignIn} className="w-full" disabled={loading}>
+                {loading ? 'Вход...' : 'Войти'}
             </Button>
           </div>
         </CardContent>
@@ -85,5 +77,3 @@ export default function LoginPage() {
     </main>
   );
 }
-
-    
