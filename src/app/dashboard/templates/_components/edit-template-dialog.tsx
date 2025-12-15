@@ -14,7 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import useSWR from 'swr';
 import type { Video, AssignedExercise, Template } from '@/lib/types';
@@ -28,7 +28,7 @@ import {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-type TemplateExercise = Omit<AssignedExercise, 'order'>;
+type TemplateExercise = Pick<AssignedExercise, 'videoId'>;
 
 interface EditTemplateDialogProps {
   template: Template;
@@ -49,7 +49,7 @@ export function EditTemplateDialog({ template, onTemplateUpdated, children }: Ed
       setFormState({
         name: template.name,
         description: template.description,
-        exercises: template.exercises.map(({order, ...ex}) => ex)
+        exercises: template.exercises.map((ex) => ({ videoId: ex.videoId }))
       });
     }
   }, [open, template]);
@@ -63,7 +63,7 @@ export function EditTemplateDialog({ template, onTemplateUpdated, children }: Ed
     if (!allVideos || allVideos.length === 0) return;
     setFormState(prev => ({
       ...prev,
-      exercises: [...prev.exercises, { videoId: allVideos[0].id, sets: 3, reps: 10 }]
+      exercises: [...prev.exercises, { videoId: allVideos[0].id }]
     }));
   };
 
@@ -74,7 +74,7 @@ export function EditTemplateDialog({ template, onTemplateUpdated, children }: Ed
     }));
   };
 
-  const handleExerciseChange = (index: number, field: keyof TemplateExercise, value: string | number) => {
+  const handleExerciseChange = (index: number, field: keyof TemplateExercise, value: string) => {
     const newExercises = [...formState.exercises];
     const exercise = newExercises[index];
     if (exercise) {
@@ -167,14 +167,6 @@ export function EditTemplateDialog({ template, onTemplateUpdated, children }: Ed
                                 </SelectContent>
                             </Select>
                         </div>
-                         <div className="grid gap-2">
-                            <Label htmlFor={`sets-${index}`} className="text-xs">Подходы</Label>
-                            <Input id={`sets-${index}`} type="number" value={ex.sets} onChange={(e) => handleExerciseChange(index, 'sets', parseInt(e.target.value))} className="w-16" />
-                         </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor={`reps-${index}`} className="text-xs">Повторы</Label>
-                            <Input id={`reps-${index}`} type="number" value={ex.reps} onChange={(e) => handleExerciseChange(index, 'reps', parseInt(e.target.value))} className="w-16" />
-                         </div>
                         <Button type="button" size="icon" variant="ghost" className="text-destructive" onClick={() => removeExerciseField(index)}>
                             <Trash2 className="h-4 w-4" />
                         </Button>

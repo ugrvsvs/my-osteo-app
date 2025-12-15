@@ -47,5 +47,5 @@ export type Template = {
   id: string;
   name: string;
   description: string;
-  exercises: Omit<AssignedExercise, 'order'>[];
+  exercises: Pick<AssignedExercise, 'videoId'>[];
 };

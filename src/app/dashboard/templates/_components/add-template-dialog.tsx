@@ -28,7 +28,7 @@ import {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-type TemplateExercise = Omit<AssignedExercise, 'order'>;
+type TemplateExercise = Pick<AssignedExercise, 'videoId'>;
 
 export function AddTemplateDialog({ onTemplateAdded }: { onTemplateAdded: () => void }) {
   const [open, setOpen] = useState(false);
@@ -52,7 +52,7 @@ export function AddTemplateDialog({ onTemplateAdded }: { onTemplateAdded: () => 
     if (!allVideos || allVideos.length === 0) return;
     setFormState(prev => ({
       ...prev,
-      exercises: [...prev.exercises, { videoId: allVideos[0].id, sets: 3, reps: 10 }]
+      exercises: [...prev.exercises, { videoId: allVideos[0].id }]
     }));
   };
 
@@ -63,7 +63,7 @@ export function AddTemplateDialog({ onTemplateAdded }: { onTemplateAdded: () => 
     }));
   };
 
-  const handleExerciseChange = (index: number, field: keyof TemplateExercise, value: string | number) => {
+  const handleExerciseChange = (index: number, field: keyof TemplateExercise, value: string) => {
     const newExercises = [...formState.exercises];
     const exercise = newExercises[index];
     if (exercise) {
@@ -165,14 +165,6 @@ export function AddTemplateDialog({ onTemplateAdded }: { onTemplateAdded: () => 
                                 </SelectContent>
                             </Select>
                         </div>
-                         <div className="grid gap-2">
-                            <Label htmlFor={`sets-${index}`} className="text-xs">Подходы</Label>
-                            <Input id={`sets-${index}`} type="number" value={ex.sets} onChange={(e) => handleExerciseChange(index, 'sets', parseInt(e.target.value))} className="w-16" />
-                         </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor={`reps-${index}`} className="text-xs">Повторы</Label>
-                            <Input id={`reps-${index}`} type="number" value={ex.reps} onChange={(e) => handleExerciseChange(index, 'reps', parseInt(e.target.value))} className="w-16" />
-                         </div>
                         <Button type="button" size="icon" variant="ghost" className="text-destructive" onClick={() => removeExerciseField(index)}>
                             <Trash2 className="h-4 w-4" />
                         </Button>

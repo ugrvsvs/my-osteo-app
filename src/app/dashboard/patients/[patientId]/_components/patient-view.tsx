@@ -125,9 +125,11 @@ export function PatientView({
             return null;
         }
         return {
-          ...templateEx,
+          videoId: video.id,
           video,
           order: 0, // temporary order
+          sets: 3, // Default values
+          reps: 12, // Default values
         };
       })
       .filter((ex): ex is AssignedExerciseWithVideo => ex !== null);

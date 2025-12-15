@@ -41,7 +41,7 @@ export async function POST(request: Request) {
             id: `tpl${Date.now()}`,
             name: newTemplateData.name,
             description: newTemplateData.description || '',
-            exercises: newTemplateData.exercises,
+            exercises: newTemplateData.exercises.map((ex: {videoId: string}) => ({ videoId: ex.videoId })),
         };
         
         templates.push(newTemplate);

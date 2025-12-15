@@ -69,16 +69,6 @@ function TemplateCard({ template, onUpdate }: { template: Template; onUpdate: ()
           <p className="text-sm font-medium text-muted-foreground">
             Упражнений: {template.exercises.length}
           </p>
-          <div className="flex flex-wrap gap-1">
-            {template.exercises.slice(0, 5).map((ex, index) => (
-              <Badge key={index} variant="secondary">
-                {`${ex.sets}x${ex.reps}`}
-              </Badge>
-            ))}
-            {template.exercises.length > 5 && (
-                <Badge variant="outline">+{template.exercises.length - 5} еще</Badge>
-            )}
-          </div>
         </div>
       </CardContent>
       <CardFooter className="border-t pt-4">
