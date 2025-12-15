@@ -4,6 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Logo } from '@/components/app/logo';
 import type { Patient, Video, AssignedExercise } from '@/lib/types';
 import { ExerciseCard } from './_components/exercise-card';
+import path from 'path';
+import fs from 'fs/promises';
 
 
 type AssignedExerciseWithVideo = AssignedExercise & { video: Video };
@@ -12,14 +14,50 @@ type PatientWithExercises = Omit<Patient, 'assignedExercises'> & {
   assignedExercises: AssignedExerciseWithVideo[];
 };
 
+async function readData<T>(filePath: string): Promise<T[]> {
+  try {
+    const fileContent = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(fileContent);
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return [];
+    }
+    throw new Error(`Error reading data file: ${filePath}`);
+  }
+}
 
 async function getPatientPlan(patientShareId: string): Promise<PatientWithExercises | null> {
     try {
-        const res = await fetch(`http://localhost:9002/api/share/${patientShareId}`, { cache: 'no-store' });
-        if (!res.ok) {
-            return null;
+        if (!patientShareId) return null;
+        
+        const patientsPath = path.join(process.cwd(), 'src', 'data', 'patients.json');
+        const videosPath = path.join(process.cwd(), 'src', 'data', 'videos.json');
+
+        const [patients, videos] = await Promise.all([
+          readData<Patient>(patientsPath),
+          readData<Video>(videosPath)
+        ]);
+
+        const patient = patients.find(p => p.shareId === patientShareId);
+
+        if (!patient) {
+          return null;
         }
-        return res.json();
+
+        const assignedExercisesWithDetails = patient.assignedExercises
+          .map(assignment => {
+            const video = videos.find(v => v.id === assignment.videoId);
+            if (!video) return null;
+            return { ...assignment, video };
+          })
+          .filter((item): item is AssignedExerciseWithVideo => item !== null)
+          .sort((a, b) => a.order - b.order);
+
+        return {
+            ...patient,
+            assignedExercises: assignedExercisesWithDetails
+        };
+
     } catch (error) {
         console.error("Failed to fetch patient plan:", error);
         return null;
