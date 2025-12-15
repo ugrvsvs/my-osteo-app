@@ -39,7 +39,8 @@ function TemplateCard({ template }: { template: Template }) {
 }
 
 export default function TemplatesPage() {
-  const { data: templates, error, isLoading, mutate } = useSWR<Template[]>('/api/templates', fetcher);
+  const { data, error, isLoading, mutate } = useSWR<{templates: Template[]}>('/api/templates', fetcher);
+  const templates = data?.templates;
 
   return (
     <div className="flex flex-col gap-6">
