@@ -25,7 +25,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import type { Video, VideoCategory } from '@/lib/types';
 import { getThumbnailFromUrl } from '@/lib/video-utils';
-import { Upload } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface EditVideoDialogProps {
@@ -156,7 +155,6 @@ export function EditVideoDialog({ video, onVideoUpdated, allCategories, children
               </Label>
                <div className="col-span-3 flex items-center gap-2">
                 <Input id="thumbnailUrl" name="thumbnailUrl" value={formState.thumbnailUrl} onChange={handleInputChange} className="flex-1" placeholder="Заполнится для YouTube" />
-                <Button type="button" size="icon" variant="outline"><Upload /></Button>
               </div>
             </div>
              {isRutubeUrl && (
@@ -164,7 +162,7 @@ export function EditVideoDialog({ video, onVideoUpdated, allCategories, children
                   <div className="col-start-2 col-span-3">
                     <Alert variant="default" className="mt-2">
                       <AlertDescription>
-                        Для Rutube необходимо указать URL превью вручную или загрузить изображение.
+                        Для Rutube необходимо указать URL превью вручную.
                       </AlertDescription>
                     </Alert>
                   </div>
@@ -217,7 +215,7 @@ export function EditVideoDialog({ video, onVideoUpdated, allCategories, children
                <Select name="level" value={formState.level} onValueChange={(value) => handleSelectChange('level', value)}>
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Выберите уровень сложности" />
-                </SelectTrigger>
+                </Trigger>
                 <SelectContent>
                   <SelectItem value="beginner">Новичок</SelectItem>
                   <SelectItem value="intermediate">Средний</SelectItem>

@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PlusCircle, Upload } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Video, VideoCategory } from '@/lib/types';
 import { getThumbnailFromUrl } from '@/lib/video-utils';
@@ -160,7 +160,6 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
               </Label>
               <div className="col-span-3 flex items-center gap-2">
                 <Input id="thumbnailUrl" name="thumbnailUrl" value={formState.thumbnailUrl} onChange={handleInputChange} className="flex-1" placeholder="Заполнится для YouTube" />
-                <Button type="button" size="icon" variant="outline"><Upload /></Button>
               </div>
             </div>
             {isRutubeUrl && (
@@ -168,7 +167,7 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
                   <div className="col-start-2 col-span-3">
                     <Alert variant="default" className="mt-2">
                       <AlertDescription>
-                        Для Rutube необходимо указать URL превью вручную или загрузить изображение.
+                        Для Rutube необходимо указать URL превью вручную.
                       </AlertDescription>
                     </Alert>
                   </div>
