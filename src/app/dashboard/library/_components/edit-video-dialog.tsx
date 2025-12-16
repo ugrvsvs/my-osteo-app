@@ -215,7 +215,7 @@ export function EditVideoDialog({ video, onVideoUpdated, allCategories, children
                <Select name="level" value={formState.level} onValueChange={(value) => handleSelectChange('level', value)}>
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Выберите уровень сложности" />
-                </Trigger>
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="beginner">Новичок</SelectItem>
                   <SelectItem value="intermediate">Средний</SelectItem>
