@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -22,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Video, VideoCategory } from '@/lib/types';
 import { getThumbnailFromUrl } from '@/lib/video-utils';
@@ -33,6 +34,7 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const [isRutubeUrl, setIsRutubeUrl] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const initialFormState: Omit<Video, 'id'> = {
     title: '',
@@ -73,6 +75,21 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
 
   const handleSelectChange = (name: 'zone' | 'level' | 'categoryId', value: string) => {
     setFormState(prev => ({ ...prev, [name]: value === 'none' ? undefined : value }));
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormState(prev => ({ ...prev, thumbnailUrl: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,14 +177,25 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
               </Label>
               <div className="col-span-3 flex items-center gap-2">
                 <Input id="thumbnailUrl" name="thumbnailUrl" value={formState.thumbnailUrl} onChange={handleInputChange} className="flex-1" placeholder="Заполнится для YouTube" />
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                <Button type="button" variant="outline" size="icon" onClick={handleUploadClick}>
+                  <Upload className="h-4 w-4" />
+                </Button>
               </div>
             </div>
+            {formState.thumbnailUrl && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <div className="col-start-2 col-span-3">
+                  <Image src={formState.thumbnailUrl} alt="Превью" width={160} height={90} className="rounded-md object-cover" />
+                </div>
+              </div>
+            )}
             {isRutubeUrl && (
               <div className="grid grid-cols-4 items-center gap-4">
                   <div className="col-start-2 col-span-3">
                     <Alert variant="default" className="mt-2">
                       <AlertDescription>
-                        Для Rutube необходимо указать URL превью вручную.
+                        Для Rutube необходимо указать URL превью вручную или загрузить файл.
                       </AlertDescription>
                     </Alert>
                   </div>
