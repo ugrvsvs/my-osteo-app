@@ -70,3 +70,31 @@ export async function PUT(
     return NextResponse.json({ message: 'An unknown error occurred' }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { patientId: string } }
+) {
+    try {
+        const { patientId } = params;
+        let patients = await getPatients();
+
+        const patientExists = patients.some(p => p.id === patientId);
+        if (!patientExists) {
+            return NextResponse.json({ message: 'Patient not found' }, { status: 404 });
+        }
+
+        const updatedPatients = patients.filter(p => p.id !== patientId);
+
+        await fs.writeFile(jsonPath, JSON.stringify(updatedPatients, null, 2));
+
+        return NextResponse.json({ message: 'Patient deleted successfully' }, { status: 200 });
+
+    } catch (error) {
+        console.error('Failed to delete patient:', error);
+        if (error instanceof Error) {
+            return NextResponse.json({ message: error.message }, { status: 500 });
+        }
+        return NextResponse.json({ message: 'An unknown error occurred' }, { status: 500 });
+    }
+}

@@ -1,13 +1,17 @@
 [
   {
     "id": "tpl1765834452462",
-    "name": "dd",
-    "description": "dd",
+    "name": "Спина",
+    "description": "Про спину",
     "exercises": [
       {
-        "videoId": "vid1765833749184",
-        "sets": 3,
-        "reps": 10
+        "videoId": "vid1765881511894"
+      },
+      {
+        "videoId": "vid1765888087922"
+      },
+      {
+        "videoId": "vid1765887822030"
       }
     ]
   }

@@ -16,7 +16,7 @@ interface ExerciseCardProps {
 
 export function ExerciseCard({ patientId, exercise }: ExerciseCardProps) {
   const router = useRouter();
-  const { video, order, sets, reps, duration, comments } = exercise;
+  const { video, order, duration, comments } = exercise;
 
   const handleClick = async () => {
     try {
@@ -62,15 +62,6 @@ export function ExerciseCard({ patientId, exercise }: ExerciseCardProps) {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
                 {(duration || video.duration) && (
                     <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary"/> <span>Длительность: {duration || video.duration}</span></div>
-                )}
-                 {(sets || reps) && (
-                    <div className="flex items-center gap-2">
-                      <span>
-                        {sets && `Подходы: ${sets}`}
-                        {sets && reps && ', '}
-                        {reps && `Повторения: ${reps}`}
-                      </span>
-                    </div>
                 )}
               </div>
             </CardContent>

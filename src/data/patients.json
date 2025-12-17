@@ -65,20 +65,25 @@
     "email": "ivan.petrov@example.com",
     "avatarUrl": "https://images.unsplash.com/photo-1607031542107-f6f46b5d54e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtYW4lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjU3Mzc3NDR8MA&ixlib=rb-4.1.0&q=80&w=1080",
     "shareId": "share-ivan-456",
-    "lastActivity": "2024-07-19T15:30:00Z",
+    "lastActivity": "2025-12-16T12:46:44.663Z",
     "assignedExercises": [
       {
-        "videoId": "vid3",
+        "videoId": "vid1765881511894",
         "order": 1,
         "sets": 3,
-        "reps": 10,
-        "comments": "Делать медленно, следить за дыханием."
+        "reps": 12
       },
       {
-        "videoId": "vid6",
+        "videoId": "vid1765888087922",
         "order": 2,
-        "sets": 2,
-        "reps": 20
+        "sets": 3,
+        "reps": 12
+      },
+      {
+        "videoId": "vid1765887822030",
+        "order": 3,
+        "sets": 3,
+        "reps": 12
       }
     ],
     "activityLog": [
@@ -86,6 +91,18 @@
         "id": "log3",
         "videoId": "vid3",
         "timestamp": "2024-07-19T15:35:00Z",
+        "action": "opened"
+      },
+      {
+        "id": "log1765888902798",
+        "videoId": "vid1765881511894",
+        "timestamp": "2025-12-16T12:41:42.798Z",
+        "action": "opened"
+      },
+      {
+        "id": "log1765889204663",
+        "videoId": "vid1765881511894",
+        "timestamp": "2025-12-16T12:46:44.663Z",
         "action": "opened"
       }
     ]
@@ -108,17 +125,10 @@
     "lastActivity": "2024-07-18T09:00:00Z",
     "assignedExercises": [
       {
-        "videoId": "vid4",
+        "videoId": "vid1765887822030",
         "order": 1,
-        "sets": 2,
-        "reps": 15,
-        "duration": "30s"
-      },
-      {
-        "videoId": "vid5",
-        "order": 2,
         "sets": 3,
-        "reps": 20
+        "reps": 12
       }
     ],
     "activityLog": []
@@ -158,5 +168,14 @@
       }
     ],
     "lastActivity": "2025-12-15T21:29:48.546Z"
+  },
+  {
+    "id": "1765881116409",
+    "name": "Олег222",
+    "email": "olegc2om@hotmail.com",
+    "avatarUrl": "https://picsum.photos/seed/1765881116409/400/400",
+    "shareId": "share-олег222-j5cva",
+    "assignedExercises": [],
+    "activityLog": []
   }
 ]

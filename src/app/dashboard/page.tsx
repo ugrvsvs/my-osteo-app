@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import type { Patient } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -56,6 +57,12 @@ function PatientCard({ patient }: { patient: Patient }) {
 
 export default function DashboardPage() {
   const { data: patients, error, isLoading, mutate } = useSWR<Patient[]>('/api/patients', fetcher);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredPatients = patients?.filter(patient => 
+    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patient.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -64,7 +71,13 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input type="search" placeholder="Поиск пациентов..." className="pl-8 sm:w-[300px]" />
+            <Input 
+              type="search" 
+              placeholder="Поиск пациентов..." 
+              className="pl-8 sm:w-[300px]" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
           <AddPatientDialog onPatientAdded={mutate} />
         </div>
@@ -90,12 +103,20 @@ export default function DashboardPage() {
       )}
       {error && <p className="text-destructive">Не удалось загрузить пациентов.</p>}
 
-      {!isLoading && patients && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {patients.map((patient) => (
-            <PatientCard key={patient.id} patient={patient} />
-          ))}
-        </div>
+      {!isLoading && filteredPatients && (
+        <>
+          {filteredPatients.length > 0 ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredPatients.map((patient) => (
+                <PatientCard key={patient.id} patient={patient} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>Пациенты не найдены.</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

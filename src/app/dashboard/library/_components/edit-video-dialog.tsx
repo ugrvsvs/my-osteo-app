@@ -75,7 +75,7 @@ export function EditVideoDialog({ video, onVideoUpdated, allCategories, children
     }
   };
 
-  const handleSelectChange = (name: 'zone' | 'level' | 'categoryId', value: string) => {
+  const handleSelectChange = (name: 'categoryId', value: string) => {
     setFormState(prev => ({ ...prev, [name]: value === 'none' ? undefined : value }));
   };
 
@@ -99,12 +99,14 @@ export function EditVideoDialog({ video, onVideoUpdated, allCategories, children
     setIsSubmitting(true);
 
     try {
+      const { zone, level, ...restOfState } = formState;
+
       const response = await fetch(`/api/videos/${video.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formState),
+        body: JSON.stringify(restOfState),
       });
 
       if (!response.ok) {
@@ -154,7 +156,7 @@ export function EditVideoDialog({ video, onVideoUpdated, allCategories, children
               <Label htmlFor="description" className="text-right pt-2">
                 Описание
               </Label>
-              <Textarea id="description" name="description" value={formState.description} onChange={handleInputChange} className="col-span-3" />
+              <Textarea id="description" name="description" value={formState.description || ''} onChange={handleInputChange} className="col-span-3" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="url" className="text-right">
@@ -211,39 +213,6 @@ export function EditVideoDialog({ video, onVideoUpdated, allCategories, children
                   {allCategories?.map(category => (
                     <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="zone" className="text-right">
-                Зона
-              </Label>
-              <Select name="zone" value={formState.zone} onValueChange={(value) => handleSelectChange('zone', value)}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Выберите зону тела" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="general">Общее</SelectItem>
-                  <SelectItem value="spine">Позвоночник</SelectItem>
-                  <SelectItem value="knee">Колено</SelectItem>
-                  <SelectItem value="shoulder">Плечо</SelectItem>
-                  <SelectItem value="foot">Стопа</SelectItem>
-                  <SelectItem value="hand">Кисть</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="level" className="text-right">
-                Уровень
-              </Label>
-               <Select name="level" value={formState.level} onValueChange={(value) => handleSelectChange('level', value)}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Выберите уровень сложности" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="beginner">Новичок</SelectItem>
-                  <SelectItem value="intermediate">Средний</SelectItem>
-                  <SelectItem value="advanced">Продвинутый</SelectItem>
                 </SelectContent>
               </Select>
             </div>
