@@ -1,5 +1,5 @@
 
-import { writeFile } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
 import { NextRequest, NextResponse } from 'next/server';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -23,11 +23,10 @@ export async function POST(request: NextRequest) {
   const publicPath = join(process.cwd(), 'public', 'uploads', 'thumbnails');
   const path = join(publicPath, uniqueFilename);
 
-  // Ensure the directory exists (Next.js doesn't have a built-in mkdir -p, 
-  // but let's assume the folder structure is set up. For robustness, one would add `fs.mkdir(publicPath, { recursive: true })`
-  // For this context, we will assume the directory exists.
-
   try {
+    // Ensure the directory exists
+    await mkdir(publicPath, { recursive: true });
+
     await writeFile(path, buffer);
     console.log(`File saved to ${path}`);
 

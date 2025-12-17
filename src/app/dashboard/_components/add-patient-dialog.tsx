@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,7 +25,6 @@ export function AddPatientDialog({ onPatientAdded }: { onPatientAdded: () => voi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
       const response = await fetch('/api/patients', {
         method: 'POST',
@@ -37,15 +35,17 @@ export function AddPatientDialog({ onPatientAdded }: { onPatientAdded: () => voi
       });
 
       if (!response.ok) {
-        throw new Error('Не удалось создать пациента');
+        // Read the specific error message from the API response
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Не удалось создать пациента');
       }
 
       toast({
         title: 'Пациент добавлен',
         description: `${name} был успешно добавлен.`,
       });
-      onPatientAdded(); // Revalidate the patient list
-      setOpen(false); // Close the dialog
+      onPatientAdded();
+      setOpen(false);
       // Reset form
       setName('');
       setEmail('');
@@ -54,6 +54,7 @@ export function AddPatientDialog({ onPatientAdded }: { onPatientAdded: () => voi
       toast({
         variant: 'destructive',
         title: 'Ошибка',
+        // Display the specific error message from the server
         description: error instanceof Error ? error.message : 'Произошла неизвестная ошибка.',
       });
     } finally {
@@ -65,7 +66,7 @@ export function AddPatientDialog({ onPatientAdded }: { onPatientAdded: () => voi
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <PlusCircle />
+          <PlusCircle className="mr-2 h-4 w-4" />
           Добавить пациента
         </Button>
       </DialogTrigger>
@@ -74,7 +75,7 @@ export function AddPatientDialog({ onPatientAdded }: { onPatientAdded: () => voi
           <DialogHeader>
             <DialogTitle>Добавить нового пациента</DialogTitle>
             <DialogDescription>
-              Введите данные нового пациента. Нажмите сохранить, когда закончите.
+              Заполните данные ниже, чтобы добавить нового пациента. Нажмите "Сохранить", когда закончите.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

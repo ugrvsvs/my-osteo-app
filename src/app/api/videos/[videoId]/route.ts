@@ -1,78 +1,92 @@
 
 import { NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs/promises';
-import { Video } from '@/lib/types';
+import db from '@/lib/db';
+import { z } from 'zod';
 
-const jsonPath = path.join(process.cwd(), 'src/data', 'videos.json');
+const videoUpdateSchema = z.object({
+  title: z.string().min(1, "Title is required").optional(),
+  url: z.string().url("A valid URL is required").optional(),
+  duration: z.string().min(1, "Duration is required").optional(),
+  description: z.string().optional().nullable(),
+  thumbnailUrl: z.string().optional().nullable(),
+  categoryId: z.string().optional().nullable(),
+});
 
-async function getVideos(): Promise<Video[]> {
-  try {
-    const fileContent = await fs.readFile(jsonPath, 'utf-8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-      return [];
-    }
-    throw new Error('Error reading data file');
-  }
-}
-
+// PUT (update) a video
 export async function PUT(
   request: Request,
   { params }: { params: { videoId: string } }
 ) {
   try {
     const { videoId } = params;
-    const updatedData = await request.json();
+    const data = await request.json();
+    const validation = videoUpdateSchema.safeParse(data);
 
-    let videos = await getVideos();
-    
-    const videoIndex = videos.findIndex(v => v.id === videoId);
-
-    if (videoIndex === -1) {
-      return NextResponse.json({ message: 'Video not found' }, { status: 404 });
+    if (!validation.success) {
+      return NextResponse.json({ message: validation.error.errors[0].message }, { status: 400 });
     }
-    
-    // Update video data
-    videos[videoIndex] = { ...videos[videoIndex], ...updatedData };
 
-    await fs.writeFile(jsonPath, JSON.stringify(videos, null, 2));
+    const existingVideo = db.prepare('SELECT * FROM videos WHERE id = ?').get(videoId);
+    if (!existingVideo) {
+        return NextResponse.json({ message: 'Video not found' }, { status: 404 });
+    }
 
-    return NextResponse.json(videos[videoIndex]);
+    const { title, description, url, thumbnailUrl, duration, categoryId } = validation.data;
+
+    const fields = {
+        title,
+        description,
+        url,
+        thumbnailUrl,
+        duration,
+        categoryId,
+        ...validation.data,
+    };
+
+    let setClause = Object.keys(fields).filter(key => fields[key] !== undefined).map(key => `${key} = ?`).join(', ');
+    let values = Object.values(fields).filter(val => val !== undefined);
+
+    if (values.length === 0) {
+        return NextResponse.json({ message: "No fields to update" }, { status: 400 });
+    }
+
+    values.push(videoId);
+
+    const stmt = db.prepare(`UPDATE videos SET ${setClause} WHERE id = ?`);
+    const info = stmt.run(...values);
+
+    if (info.changes > 0) {
+      const updatedVideo = db.prepare('SELECT * FROM videos WHERE id = ?').get(videoId);
+      return NextResponse.json(updatedVideo);
+    } else {
+      return NextResponse.json({ message: 'Update failed, video not found or data unchanged' }, { status: 404 });
+    }
+
   } catch (error) {
     console.error('Failed to update video:', error);
-    if (error instanceof Error) {
-        return NextResponse.json({ message: error.message }, { status: 500 });
-    }
-    return NextResponse.json({ message: 'An unknown error occurred' }, { status: 500 });
+    return NextResponse.json({ message: 'Failed to update video' }, { status: 500 });
   }
 }
 
-export async function DELETE(
+// DELETE a video
+export function DELETE(
   request: Request,
   { params }: { params: { videoId: string } }
 ) {
-    try {
-        const { videoId } = params;
-        let videos = await getVideos();
+  try {
+    const { videoId } = params;
+    
+    const stmt = db.prepare('DELETE FROM videos WHERE id = ?');
+    const info = stmt.run(videoId);
 
-        const videoExists = videos.some(v => v.id === videoId);
-        if (!videoExists) {
-            return NextResponse.json({ message: 'Video not found' }, { status: 404 });
-        }
-
-        const updatedVideos = videos.filter(v => v.id !== videoId);
-
-        await fs.writeFile(jsonPath, JSON.stringify(updatedVideos, null, 2));
-
-        return NextResponse.json({ message: 'Video deleted successfully' }, { status: 200 });
-
-    } catch (error) {
-        console.error('Failed to delete video:', error);
-        if (error instanceof Error) {
-            return NextResponse.json({ message: error.message }, { status: 500 });
-        }
-        return NextResponse.json({ message: 'An unknown error occurred' }, { status: 500 });
+    if (info.changes > 0) {
+      return NextResponse.json({ message: 'Video deleted successfully' }, { status: 200 });
+    } else {
+      return NextResponse.json({ message: 'Video not found' }, { status: 404 });
     }
+
+  } catch (error) {
+    console.error('Failed to delete video:', error);
+    return NextResponse.json({ message: 'Failed to delete video' }, { status: 500 });
+  }
 }

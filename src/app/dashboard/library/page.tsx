@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-
+import { ClientOnly } from '@/components/app/client-only';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -168,7 +168,9 @@ export default function LibraryPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <AddCategoryDialog onCategoryAdded={handleMutateAll} />
+          <ClientOnly>
+            <AddCategoryDialog onCategoryAdded={handleMutateAll} />
+          </ClientOnly>
           <AddVideoDialog onVideoAdded={handleMutateAll} allCategories={categories} />
         </div>
       </div>

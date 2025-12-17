@@ -1,7 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,178 +7,165 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogClose,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Trash2, GripVertical } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import useSWR from 'swr';
-import type { Video, AssignedExercise, Template } from '@/lib/types';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import type { Video, Template } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import Image from 'next/image';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-type TemplateExercise = Pick<AssignedExercise, 'videoId'>;
+export function EditTemplateDialog({ 
+    children,
+    template,
+    onTemplateUpdated
+}: {
+    children: React.ReactNode;
+    template: Template;
+    onTemplateUpdated: () => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [name, setName] = useState(template.name);
+  const [description, setDescription] = useState(template.description);
+  const [selectedExercises, setSelectedExercises] = useState<Video[]>(template.exercises);
+  const [isSaving, setIsSaving] = useState(false);
 
-interface EditTemplateDialogProps {
-  template: Template;
-  onTemplateUpdated: () => void;
-  children: React.ReactNode;
-}
-
-export function EditTemplateDialog({ template, onTemplateUpdated, children }: EditTemplateDialogProps) {
-  const [open, setOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: allVideos, error: videosError } = useSWR<Video[]>('/api/videos', fetcher);
   const { toast } = useToast();
-  const { data: allVideos } = useSWR<Video[]>('/api/videos', fetcher);
-
-  const [formState, setFormState] = useState<Omit<Template, 'id'>>({ name: '', description: '', exercises: [] });
 
   useEffect(() => {
-    if (open) {
-      setFormState({
-        name: template.name,
-        description: template.description,
-        exercises: template.exercises.map((ex) => ({ videoId: ex.videoId }))
-      });
+    if (isOpen) {
+        setName(template.name);
+        setDescription(template.description);
+        setSelectedExercises(template.exercises);
     }
-  }, [open, template]);
+  }, [isOpen, template]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormState((prev) => ({ ...prev, [name]: value }));
-  };
-  
-  const addExerciseField = () => {
-    if (!allVideos || allVideos.length === 0) return;
-    setFormState(prev => ({
-      ...prev,
-      exercises: [...prev.exercises, { videoId: allVideos[0].id }]
-    }));
-  };
-
-  const removeExerciseField = (index: number) => {
-    setFormState(prev => ({
-      ...prev,
-      exercises: prev.exercises.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleExerciseChange = (index: number, field: keyof TemplateExercise, value: string) => {
-    const newExercises = [...formState.exercises];
-    const exercise = newExercises[index];
-    if (exercise) {
-      (exercise[field] as any) = value;
-      setFormState(prev => ({ ...prev, exercises: newExercises }));
+  const addExercise = (video: Video) => {
+    if (!selectedExercises.some((e) => e.id === video.id)) {
+      setSelectedExercises([...selectedExercises, video]);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formState.exercises.length === 0) {
-        toast({
-            variant: 'destructive',
-            title: 'Ошибка',
-            description: 'Шаблон должен содержать хотя бы одно упражнение.',
-        });
-        return;
-    }
-    setIsSubmitting(true);
+  const removeExercise = (videoId: string) => {
+    setSelectedExercises(selectedExercises.filter((e) => e.id !== videoId));
+  };
 
+  const handleSave = async () => {
+    if (!name.trim()) {
+      toast({ variant: 'destructive', title: 'Название обязательно' });
+      return;
+    }
+    setIsSaving(true);
     try {
       const response = await fetch(`/api/templates/${template.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formState),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          description,
+          exercises: selectedExercises,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Не удалось обновить шаблон');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Не удалось обновить шаблон');
       }
 
       toast({
         title: 'Шаблон обновлен',
-        description: `Шаблон "${formState.name}" был успешно обновлен.`,
       });
+      
+      // CORRECT MUTATION: Revalidate the list from the server.
       onTemplateUpdated();
-      setOpen(false);
+      
+      setIsOpen(false);
     } catch (error) {
-      console.error(error);
       toast({
         variant: 'destructive',
         title: 'Ошибка',
         description: error instanceof Error ? error.message : 'Произошла неизвестная ошибка.',
       });
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
         {children}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Редактировать шаблон</DialogTitle>
-            <DialogDescription>Измените данные шаблона.</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
-            <div className="space-y-2">
-              <Label htmlFor="name">Название шаблона</Label>
-              <Input id="name" name="name" value={formState.name} onChange={handleInputChange} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Описание</Label>
-              <Textarea id="description" name="description" value={formState.description} onChange={handleInputChange} />
-            </div>
-            
-            <div className="space-y-4">
-                <Label>Упражнения</Label>
-                {formState.exercises.map((ex, index) => (
-                    <div key={index} className="flex items-end gap-2 p-3 border rounded-md">
-                        <div className="grid gap-2 flex-1">
-                            <Label htmlFor={`video-${index}`} className="text-xs">Видео</Label>
-                             <Select
-                                value={ex.videoId}
-                                onValueChange={(value) => handleExerciseChange(index, 'videoId', value)}
-                            >
-                                <SelectTrigger id={`video-${index}`}>
-                                <SelectValue placeholder="Выберите видео" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                {allVideos?.map(video => (
-                                    <SelectItem key={video.id} value={video.id}>{video.title}</SelectItem>
-                                ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <Button type="button" size="icon" variant="ghost" className="text-destructive" onClick={() => removeExerciseField(index)}>
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
+      <DialogContent className="max-w-4xl grid-rows-[auto_1fr_auto] h-[80vh]">
+        <DialogHeader>
+          <DialogTitle>Редактировать шаблон</DialogTitle>
+          <DialogDescription>
+            Измените детали шаблона и список упражнений.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto pr-2">
+            <div>
+                <div className="space-y-4">
+                    <div>
+                        <Label htmlFor="name-edit">Название</Label>
+                        <Input id="name-edit" value={name} onChange={(e) => setName(e.target.value)} />
                     </div>
-                ))}
-                <Button type="button" variant="outline" onClick={addExerciseField}>Добавить упражнение</Button>
+                    <div>
+                        <Label htmlFor="description-edit">Описание</Label>
+                        <Textarea id="description-edit" value={description || ''} onChange={(e) => setDescription(e.target.value)} />
+                    </div>
+                </div>
+
+                <div className="mt-4">
+                    <h3 className="font-semibold mb-2">Выбранные упражнения ({selectedExercises.length})</h3>
+                    <ScrollArea className="h-64 pr-4">
+                    <div className="space-y-2">
+                        {selectedExercises.length > 0 ? selectedExercises.map((ex) => (
+                        <div key={ex.id} className="flex items-center gap-2 p-2 rounded-md bg-muted/50">
+                            <p className="flex-1 font-medium text-sm">{ex.title}</p>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeExercise(ex.id)}>
+                                <Trash2 className="h-4 w-4 text-destructive"/>
+                            </Button>
+                        </div>
+                        )) : <p className="text-sm text-muted-foreground text-center py-4">Нет выбранных упражнений</p>}
+                    </div>
+                    </ScrollArea>
+                </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Сохранение...' : 'Сохранить изменения'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <div>
+                <h3 className="font-semibold mb-2">Библиотека упражнений</h3>
+                <ScrollArea className="h-[50vh] pr-4">
+                    <div className="space-y-2">
+                        {videosError ? <p>Не удалось загрузить видео.</p> : !allVideos ? <p>Загрузка...</p> : allVideos.map((video) => (
+                            <div key={video.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
+                                <Image src={video.thumbnailUrl} alt={video.title} width={60} height={34} className="rounded aspect-video object-cover" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-xs truncate">{video.title}</p>
+                                </div>
+                                <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => addExercise(video)} disabled={selectedExercises.some(e => e.id === video.id)}>
+                                    <Trash2 className="h-4 w-4 text-destructive"/>
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                </ScrollArea>
+            </div>
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline" disabled={isSaving}>Отмена</Button>
+          </DialogClose>
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Сохранение...' : 'Сохранить изменения'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

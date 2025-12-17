@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import type { Template } from '@/lib/types';
 import useSWR from 'swr';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,7 +29,25 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+// ROBUST FETCHER: This fetcher handles HTTP errors.
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+
+  // If the status code is not in the range 200-299, it's an error.
+  if (!res.ok) {
+    const error = new Error('An error occurred while fetching the data.');
+    // Attach extra info to the error object.
+    try {
+        error.info = await res.json();
+    } catch (e) {
+        error.info = { message: res.statusText };
+    }
+    error.status = res.status;
+    throw error;
+  }
+
+  return res.json();
+};
 
 function TemplateCard({ template, onUpdate }: { template: Template; onUpdate: () => void }) {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -42,11 +59,13 @@ function TemplateCard({ template, onUpdate }: { template: Template; onUpdate: ()
       const response = await fetch(`/api/templates/${template.id}`, {
         method: 'DELETE',
       });
+      // This check is now redundant because the fetcher would throw, but it's good for defense-in-depth.
       if (!response.ok) {
-        throw new Error('Не удалось удалить шаблон.');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Не удалось удалить шаблон.');
       }
       toast({ title: 'Шаблон удален' });
-      onUpdate();
+      onUpdate(); // Revalidate the list
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -65,11 +84,9 @@ function TemplateCard({ template, onUpdate }: { template: Template; onUpdate: ()
         {template.description && <CardDescription>{template.description}</CardDescription>}
       </CardHeader>
       <CardContent className="flex-1">
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-muted-foreground">
-            Упражнений: {template.exercises.length}
-          </p>
-        </div>
+        <p className="text-sm font-medium text-muted-foreground">
+          Упражнений: {template.exercises.length}
+        </p>
       </CardContent>
       <CardFooter className="border-t pt-4">
         <div className="flex w-full justify-end gap-2">
@@ -108,14 +125,19 @@ function TemplateCard({ template, onUpdate }: { template: Template; onUpdate: ()
 export default function TemplatesPage() {
   const { data, error, isLoading, mutate } = useSWR<Template[]>('/api/templates', fetcher);
 
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Шаблоны</h1>
-        <AddTemplateDialog onTemplateAdded={mutate} />
-      </div>
-
-      {isLoading && (
+  // Render error state
+  if (error) {
+    return (
+        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-destructive/50 bg-destructive/10 py-24 text-center">
+            <h2 className="text-xl font-semibold">Не удалось загрузить шаблоны</h2>
+            <p className="text-destructive/80">{(error.info as any)?.message || error.message}</p>
+        </div>
+    );
+  }
+  
+  // Render loading state
+  if (isLoading) {
+    return (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <Card key={i}>
@@ -124,43 +146,45 @@ export default function TemplatesPage() {
                 <Skeleton className="h-4 w-full mt-2" />
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  <Skeleton className="h-6 w-12 rounded-full" />
-                  <Skeleton className="h-6 w-12 rounded-full" />
-                </div>
+                <Skeleton className="h-5 w-1/4" />
               </CardContent>
               <CardFooter className="border-t pt-4">
                  <div className="flex w-full justify-end gap-2">
-                    <Skeleton className="h-8 w-8 rounded-md" />
-                    <Skeleton className="h-8 w-8 rounded-md" />
+                    <Skeleton className="h-10 w-10" />
+                    <Skeleton className="h-10 w-10" />
                  </div>
               </CardFooter>
             </Card>
           ))}
         </div>
+      );
+  }
+
+  // Render content
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Шаблоны</h1>
+        <AddTemplateDialog onTemplateAdded={mutate} />
+      </div>
+
+      {data && data.length === 0 && (
+        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 py-24 text-center">
+          <FileStack className="h-12 w-12 text-muted-foreground" />
+          <h2 className="mt-4 text-xl font-semibold">Шаблоны не найдены</h2>
+          <p className="text-muted-foreground">Создайте свой первый шаблон, чтобы ускорить назначение упражнений.</p>
+          <div className="mt-6">
+            <AddTemplateDialog onTemplateAdded={mutate} />
+          </div>
+        </div>
       )}
 
-      {error && <p className="text-destructive">Не удалось загрузить шаблоны.</p>}
-
-      {!isLoading && data && (
-        <>
-          {data.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 py-24 text-center">
-              <FileStack className="h-12 w-12 text-muted-foreground" />
-              <h2 className="mt-4 text-xl font-semibold">Шаблоны не найдены</h2>
-              <p className="text-muted-foreground">Создайте свой первый шаблон, чтобы ускорить назначение упражнений.</p>
-              <div className="mt-6">
-                <AddTemplateDialog onTemplateAdded={mutate} />
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {data.map((template) => (
-                <TemplateCard key={template.id} template={template} onUpdate={mutate} />
-              ))}
-            </div>
-          )}
-        </>
+      {data && data.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {data.map((template) => (
+            <TemplateCard key={template.id} template={template} onUpdate={mutate} />
+          ))}
+        </div>
       )}
     </div>
   );

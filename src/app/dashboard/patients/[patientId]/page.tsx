@@ -1,77 +1,59 @@
+
 import { notFound } from 'next/navigation';
 import { PatientView } from './_components/patient-view';
-import type { Patient, Video, Template } from '@/lib/types';
+import type { Patient, Video, AssignedExercise } from '@/lib/types';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import path from 'path';
-import fs from 'fs/promises';
+import { headers } from 'next/headers';
 
-async function readData<T>(filePath: string): Promise<T[]> {
+// Optimized data fetching function for the page
+async function getPatientData(patientId: string, cookie: string | null): Promise<{
+  patient: (Patient & { assignedExercises: (AssignedExercise & { video: Video })[] }) | null;
+}> {
+  const fetchOptions = { headers: { 'Cookie': cookie || '' } };
+  // CORRECTED: Use the correct internal address from server logs
+  const baseUrl = 'http://localhost:9002';
+
   try {
-    const fileContent = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-      return [];
+    // Fetch only the essential patient data for the initial load
+    const patientRes = await fetch(`${baseUrl}/api/patients/${patientId}`, fetchOptions);
+
+    if (!patientRes.ok) {
+      if (patientRes.status === 404) return { patient: null };
+      const errorText = await patientRes.text();
+      console.error(`Failed to fetch patient. Status: ${patientRes.status}`, errorText);
+      throw new Error(`Failed to fetch patient. Status: ${patientRes.status}`);
     }
-    throw new Error(`Error reading data file: ${filePath}`);
-  }
-}
+    
+    const patient = await patientRes.json();
 
-async function getPatient(patientId: string): Promise<Patient | null> {
-  try {
-    const jsonPath = path.join(process.cwd(), 'src', 'data', 'patients.json');
-    const patients = await readData<Patient>(jsonPath);
-    const patient = patients.find(p => p.id === patientId);
-    return patient || null;
+    // The API for a single patient already returns the exercises in the correct shape.
+    // We just need to ensure they are sorted.
+    const assignedExercisesWithVideo = (patient.assignedExercises || []).sort((a: any, b: any) => a.order - b.order);
+    
+    const fullPatientData = {
+        ...patient,
+        assignedExercises: assignedExercisesWithVideo
+    }
+
+    return { patient: fullPatientData };
+
   } catch (error) {
-    console.error("Failed to fetch patient:", error);
-    return null;
+    console.error("Failed to fetch page data:", error);
+    return { patient: null };
   }
 }
-
-async function getVideos(): Promise<Video[]> {
-   try {
-    const jsonPath = path.join(process.cwd(), 'src', 'data', 'videos.json');
-    const videos = await readData<Video>(jsonPath);
-    return videos;
-  } catch (error) {
-    console.error("Failed to fetch videos:", error);
-    return [];
-  }
-}
-
-async function getTemplates(): Promise<Template[]> {
-  try {
-    const jsonPath = path.join(process.cwd(), 'src', 'data', 'templates.json');
-    const templates = await readData<Template>(jsonPath);
-    return templates;
-  } catch (error) {
-    console.error("Failed to fetch templates:", error);
-    return [];
-  }
-}
-
 
 export default async function PatientDetailPage({ params }: { params: { patientId: string } }) {
+  const headersList = headers();
+  const cookie = headersList.get('cookie');
+    
   const { patientId } = params;
-  const [patient, allVideos, allTemplates] = await Promise.all([
-    getPatient(patientId),
-    getVideos(),
-    getTemplates()
-  ]);
+  // Fetch only the essential patient data
+  const { patient } = await getPatientData(patientId, cookie);
 
   if (!patient) {
     notFound();
   }
-  
-  const assignedVideosWithDetails = (patient.assignedExercises || [])
-    .map(assignment => {
-      const video = allVideos?.find(v => v.id === assignment.videoId);
-      if (!video) return null;
-      return { ...assignment, video };
-    })
-    .filter((item): item is NonNullable<typeof item> => item !== null)
-    .sort((a, b) => a.order - b.order);
 
   return (
     <div className="flex flex-col gap-4 h-full">
@@ -88,9 +70,8 @@ export default async function PatientDetailPage({ params }: { params: { patientI
       </Breadcrumb>
       <PatientView 
         patient={patient} 
-        initialAssignedExercises={assignedVideosWithDetails} 
-        allVideos={allVideos || []}
-        allTemplates={allTemplates || []}
+        initialAssignedExercises={patient.assignedExercises}
+        // allVideos and allTemplates are no longer passed down, they will be fetched on demand
       />
     </div>
   );

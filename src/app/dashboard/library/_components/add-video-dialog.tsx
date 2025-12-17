@@ -29,6 +29,8 @@ import { getThumbnailFromUrl } from '@/lib/video-utils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
+const URL_REGEX = /^(https?):\/\/\S+$/;
+
 export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: () => void, allCategories: VideoCategory[] }) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,6 +39,7 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [thumbnailSource, setThumbnailSource] = useState<'url' | 'upload'>('url');
   const [isUploading, setIsUploading] = useState(false);
+  const [urlError, setUrlError] = useState<string | null>(null);
 
   const initialFormState: Omit<Video, 'id' | 'zone' | 'level'> & { zone?: string; level?: string; } = {
     title: '',
@@ -53,6 +56,7 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
     setFormState(initialFormState);
     setIsRutubeUrl(false);
     setThumbnailSource('url');
+    setUrlError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -63,6 +67,7 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
     setFormState(prev => ({ ...prev, [name]: value }));
 
     if (name === 'url') {
+      setUrlError(null); // Clear error on change
       setIsRutubeUrl(value.includes('rutube.ru'));
       if(value === '' && thumbnailSource === 'url') {
         setFormState(prev => ({ ...prev, thumbnailUrl: '' }));
@@ -72,12 +77,22 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
 
   const handleUrlBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const url = e.target.value;
+    if (!url || !URL_REGEX.test(url)) {
+        setUrlError('Please enter a valid URL (e.g., https://example.com)');
+    } else {
+        setUrlError(null);
+    }
+
+    if (thumbnailSource !== 'url') {
+      return;
+    }
+
     if (url.includes('rutube.ru')) {
       setIsRutubeUrl(true);
       return;
     }
     setIsRutubeUrl(false);
-    if (url && thumbnailSource === 'url') { 
+    if (url) { 
       const thumbnailUrl = await getThumbnailFromUrl(url);
       if (thumbnailUrl) {
         setFormState(prev => ({ ...prev, thumbnailUrl }));
@@ -129,7 +144,6 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
           title: 'Ошибка загрузки',
           description: error instanceof Error ? error.message : 'Произошла неизвестная ошибка.',
         });
-        // Clear the file input in case of an error
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
@@ -148,6 +162,12 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formState.url || !URL_REGEX.test(formState.url)) {
+        setUrlError('A valid URL is required.');
+        return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -215,8 +235,11 @@ export function AddVideoDialog({ onVideoAdded, allCategories }: { onVideoAdded: 
               <Textarea id="description" name="description" value={formState.description} onChange={handleInputChange} className="col-span-3" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="url" className="text-right">URL Видео</Label>
-              <Input id="url" name="url" value={formState.url} onChange={handleInputChange} onBlur={handleUrlBlur} className="col-span-3" required />
+                <Label htmlFor="url" className="text-right">URL Видео</Label>
+                <div className="col-span-3">
+                    <Input id="url" name="url" value={formState.url} onChange={handleInputChange} onBlur={handleUrlBlur} className={`w-full ${urlError ? 'border-red-500' : ''}`} required />
+                    {urlError && <p className="text-red-500 text-sm mt-1">{urlError}</p>}
+                </div>
             </div>
 
             <div className="grid grid-cols-4 items-start gap-4">

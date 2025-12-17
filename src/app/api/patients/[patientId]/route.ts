@@ -1,100 +1,87 @@
+
 import { NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs/promises';
-import { Patient } from '@/lib/types';
+import db from '@/lib/db';
 
-const jsonPath = path.join(process.cwd(), 'src', 'data', 'patients.json');
-
-async function getPatients(): Promise<Patient[]> {
-  try {
-    const fileContent = await fs.readFile(jsonPath, 'utf-8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-      return [];
-    }
-    throw new Error('Error reading data file');
-  }
-}
-
-export async function GET(
+// GET a single patient by ID
+export function GET(
   request: Request,
   { params }: { params: { patientId: string } }
 ) {
   try {
     const { patientId } = params;
-    const patients = await getPatients();
-    const patient = patients.find(p => p.id === patientId);
 
-    if (patient) {
-      return NextResponse.json(patient);
-    } else {
-      return NextResponse.json({ message: 'Patient not found' }, { status: 404 });
+    const patientStmt = db.prepare('SELECT * FROM patients WHERE id = ?');
+    const patient = patientStmt.get(patientId);
+
+    if (!patient) {
+      return NextResponse.json({ message: 'Пациент не найден' }, { status: 404 });
     }
+
+    const exerciseStmt = db.prepare(`
+        SELECT 
+            v.id, v.title, v.description, v.thumbnailUrl, v.duration, ax.display_order as "order"
+        FROM assigned_exercises ax
+        JOIN videos v ON v.id = ax.video_id
+        WHERE ax.patient_id = ?
+        ORDER BY ax.display_order
+    `);
+    const assignedExercisesRaw = exerciseStmt.all(patientId);
+    
+    const assignedExercises = assignedExercisesRaw.map(row => ({
+        patient_id: patientId,
+        video_id: row.id,
+        display_order: row.order,
+        video: {
+            id: row.id,
+            title: row.title,
+            description: row.description,
+            thumbnailUrl: row.thumbnailUrl,
+            duration: row.duration,
+        }
+    }));
+
+    // REMOVED: No longer fetching activity log.
+    const patientData = {
+        ...patient,
+        assignedExercises: assignedExercises || [],
+    };
+
+    return NextResponse.json(patientData);
   } catch (error) {
-    console.error('Failed to read patients data:', error);
-    if (error instanceof Error) {
-        return NextResponse.json({ message: error.message }, { status: 500 });
-    }
-    return NextResponse.json({ message: 'An unknown error occurred' }, { status: 500 });
+    console.error(`Failed to retrieve patient [${params.patientId}]:`, error);
+    return NextResponse.json({ message: 'Не удалось получить данные пациента' }, { status: 500 });
   }
 }
 
-export async function PUT(
+
+// DELETE a patient
+export function DELETE(
   request: Request,
   { params }: { params: { patientId: string } }
 ) {
   try {
     const { patientId } = params;
-    const updatedData = await request.json();
 
-    let patients = await getPatients();
-    
-    const patientIndex = patients.findIndex(p => p.id === patientId);
+    const deletePatient = db.transaction(() => {
+      const patient = db.prepare('SELECT id FROM patients WHERE id = ?').get(patientId);
+      if (!patient) return { changes: 0 };
+      
+      db.prepare('DELETE FROM assigned_exercises WHERE patient_id = ?').run(patientId);
+      // REMOVED: No longer deleting from activity_log
+      const result = db.prepare('DELETE FROM patients WHERE id = ?').run(patientId);
+      return result;
+    });
 
-    if (patientIndex === -1) {
-      return NextResponse.json({ message: 'Patient not found' }, { status: 404 });
+    const result = deletePatient();
+
+    if (result.changes === 0) {
+      // Patient not found, but DELETE is idempotent.
     }
-    
-    // Update patient data
-    patients[patientIndex] = { ...patients[patientIndex], ...updatedData };
 
-    await fs.writeFile(jsonPath, JSON.stringify(patients, null, 2));
+    return new NextResponse(null, { status: 204 });
 
-    return NextResponse.json(patients[patientIndex]);
   } catch (error) {
-    console.error('Failed to update patient:', error);
-    if (error instanceof Error) {
-        return NextResponse.json({ message: error.message }, { status: 500 });
-    }
-    return NextResponse.json({ message: 'An unknown error occurred' }, { status: 500 });
+    console.error(`Failed to delete patient [${params.patientId}]:`, error);
+    return NextResponse.json({ message: 'Не удалось удалить пациента' }, { status: 500 });
   }
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: { patientId: string } }
-) {
-    try {
-        const { patientId } = params;
-        let patients = await getPatients();
-
-        const patientExists = patients.some(p => p.id === patientId);
-        if (!patientExists) {
-            return NextResponse.json({ message: 'Patient not found' }, { status: 404 });
-        }
-
-        const updatedPatients = patients.filter(p => p.id !== patientId);
-
-        await fs.writeFile(jsonPath, JSON.stringify(updatedPatients, null, 2));
-
-        return NextResponse.json({ message: 'Patient deleted successfully' }, { status: 200 });
-
-    } catch (error) {
-        console.error('Failed to delete patient:', error);
-        if (error instanceof Error) {
-            return NextResponse.json({ message: error.message }, { status: 500 });
-        }
-        return NextResponse.json({ message: 'An unknown error occurred' }, { status: 500 });
-    }
 }

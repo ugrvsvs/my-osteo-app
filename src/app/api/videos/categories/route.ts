@@ -1,57 +1,55 @@
+
 import { NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs/promises';
-import { VideoCategory } from '@/lib/types';
+import db from '@/lib/db';
+import { z } from 'zod';
+import { v4 as uuidv4 } from 'uuid';
 
-const jsonPath = path.join(process.cwd(), 'src', 'data', 'video-categories.json');
+const categorySchema = z.object({
+  name: z.string().min(1, "Name is required"),
+});
 
-async function getCategories(): Promise<VideoCategory[]> {
+export function GET() {
   try {
-    const fileContent = await fs.readFile(jsonPath, 'utf-8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-      // If file doesn't exist, create it with an empty array
-      await fs.writeFile(jsonPath, JSON.stringify([], null, 2));
-      return [];
-    }
-    throw new Error('Error reading video categories data file');
-  }
-}
-
-export async function GET() {
-  try {
-    const categories = await getCategories();
+    const stmt = db.prepare('SELECT * FROM video_categories ORDER BY name');
+    const categories = stmt.all();
     return NextResponse.json({ categories });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'An unknown error occurred';
-    return NextResponse.json({ message }, { status: 500 });
+    console.error('Failed to retrieve categories:', error);
+    return NextResponse.json({ message: 'Failed to retrieve categories' }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
-    try {
-        const newCategoryData = await request.json();
-        let categories = await getCategories();
+  try {
+    const data = await request.json();
+    const validation = categorySchema.safeParse(data);
 
-        if (!newCategoryData.name) {
-            return NextResponse.json({ message: 'Name is required' }, { status: 400 });
-        }
-
-        const newCategory: VideoCategory = {
-            id: `cat${Date.now()}`,
-            name: newCategoryData.name,
-        };
-        
-        categories.push(newCategory);
-
-        await fs.writeFile(jsonPath, JSON.stringify(categories, null, 2));
-
-        return NextResponse.json(newCategory, { status: 201 });
-
-    } catch (error) {
-        console.error('Failed to create category:', error);
-        const message = error instanceof Error ? error.message : 'An unknown error occurred';
-        return NextResponse.json({ message }, { status: 500 });
+    if (!validation.success) {
+      return NextResponse.json({ message: validation.error.errors[0].message }, { status: 400 });
     }
+
+    const { name } = validation.data;
+    const id = uuidv4();
+
+    try {
+      const stmt = db.prepare('INSERT INTO video_categories (id, name) VALUES (?, ?)');
+      const info = stmt.run(id, name);
+      
+      if (info.changes > 0) {
+        const newCategory = db.prepare('SELECT * FROM video_categories WHERE id = ?').get(id);
+        return NextResponse.json(newCategory, { status: 201 });
+      } else {
+        return NextResponse.json({ message: 'Failed to create category' }, { status: 500 });
+      }
+    } catch (error: any) {
+       if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+         return NextResponse.json({ message: 'A category with this name already exists' }, { status: 409 });
+       }
+       throw error; 
+    }
+
+  } catch (error) {
+    console.error('Failed to create category:', error);
+    return NextResponse.json({ message: 'Failed to create category' }, { status: 500 });
+  }
 }
